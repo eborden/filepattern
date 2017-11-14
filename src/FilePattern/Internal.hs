@@ -19,7 +19,6 @@ module FilePattern.Internal(
     ) where
 
 import Control.Applicative
-import Control.Monad
 import Data.Char
 import Data.List.Extra
 import Data.Maybe
@@ -58,8 +57,13 @@ data Pat = Lit String -- ^ foo
                                         -- e.g. *foo*bar = Stars "" ["foo"] "bar"
             deriving (Show,Eq,Ord)
 
-isLit Lit{} = True; isLit _ = False
+isLit :: Pat -> Bool
+isLit Lit{} = True
+isLit _ = False
+
+fromLit :: Pat -> String
 fromLit (Lit x) = x
+fromLit _ = error "fromLit: applied to non Lit"
 
 
 data Lexeme = Str String | Slash | SlashSlash
@@ -67,23 +71,26 @@ data Lexeme = Str String | Slash | SlashSlash
 
 -- | Parse a FilePattern with a given lexer. All optimisations I can think of are invalid because they change the extracted expressions.
 parseWith :: (FilePattern -> [Lexeme]) -> FilePattern -> [Pat]
-parseWith lex = f False True . lex
+parseWith lexer = f False True . lexer
     where
         -- str = I have ever seen a Str go past (equivalent to "can I be satisfied by no paths")
         -- slash = I am either at the start, or my previous character was Slash
-        f str slash [] = [Lit "" | slash]
-        f str slash (Str "**":xs) = Skip : f True False xs
-        f str slash (Str x:xs) = parseLit x : f True False xs
-        f str slash (SlashSlash:Slash:xs) | not str = Skip1 : f str True xs
-        f str slash (SlashSlash:xs) = Skip : f str False xs
-        f str slash (Slash:xs) = [Lit "" | not str] ++ f str True xs
+        f _ slash [] = [Lit "" | slash]
+        f _ _ (Str "**":xs) = Skip : f True False xs
+        f _ _ (Str x:xs) = parseLit x : f True False xs
+        f str _ (SlashSlash:Slash:xs) | not str = Skip1 : f str True xs
+        f str _ (SlashSlash:xs) = Skip : f str False xs
+        f str _ (Slash:xs) = [Lit "" | not str] ++ f str True xs
 
 
 parseLit :: String -> Pat
 parseLit "*" = Star
 parseLit x = case split (== '*') x of
-    [x] -> Lit x
-    pre:xs | Just (mid,post) <- unsnoc xs -> Stars pre mid post
+    [] -> error "parseLit: given empty string"
+    [y] -> Lit y
+    pre:xs -> case unsnoc xs of
+        Nothing -> error "parseLit: Stars check failed"
+        Just (mid,post) -> Stars pre mid post
 
 
 -- | Optimisations that may change the matched expressions
@@ -92,14 +99,14 @@ optimise (Skip:Skip:xs) = optimise $ Skip:xs
 optimise (Skip:Star:xs) = optimise $ Skip1:xs
 optimise (Star:Skip:xs) = optimise $ Skip1:xs
 optimise (x:xs) = x : optimise xs
-optimise [] =[]
+optimise [] = []
 
 
 -- | A 'FilePattern' that will only match 'isRelativePath' values.
 isRelativePattern :: FilePattern -> Bool
 isRelativePattern ('*':'*':xs)
     | [] <- xs = True
-    | x:xs <- xs, isPathSeparator x = True
+    | x:_ <- xs, isPathSeparator x = True
 isRelativePattern _ = False
 
 -- | A non-absolute 'FilePath'.
@@ -126,26 +133,32 @@ matchOne :: Pat -> String -> Bool
 matchOne (Lit x) y = x == y
 matchOne x@Stars{} y = isJust $ matchStars x y
 matchOne Star _ = True
+matchOne Skip _ = False
+matchOne Skip1 _ = False
 
 
 -- Only return the first (all patterns left-most) valid star matching
 matchStars :: Pat -> String -> Maybe [String]
 matchStars (Stars pre mid post) x = do
-    x <- stripPrefix pre x
-    x <- if null post then Just x else stripSuffix post x
-    stripInfixes mid x
+    y <- stripPrefix pre x
+    z <- if null post then Just y else stripSuffix post y
+    stripInfixes mid z
     where
-        stripInfixes [] x = Just [x]
-        stripInfixes (m:ms) x = do
-            (a,x) <- stripInfix m x
-            (a:) <$> stripInfixes ms x
+        stripInfixes [] y = Just [y]
+        stripInfixes (m:ms) y = do
+            (a,z) <- stripInfix m y
+            (a:) <$> stripInfixes ms z
+matchStars (Lit _) _ = Nothing
+matchStars Star _ = Nothing
+matchStars Skip _ = Nothing
+matchStars Skip1 _ = Nothing
 
 matchWith :: (FilePattern -> [Pat]) -> FilePattern -> FilePath -> Bool
-matchWith parser p = case optimise $ parser p of
+matchWith parser pattern = case optimise $ parser pattern of
     [x] | x == Skip || x == Skip1 -> if rp then isRelativePath else const True
     p -> let f = not . null . match p . split isPathSeparator
          in if rp then (\x -> isRelativePath x && f x) else f
-    where rp = isRelativePattern p
+    where rp = isRelativePattern pattern
 
 
 -- | Like '?==', but returns 'Nothing' on if there is no match, otherwise 'Just' with the list
@@ -202,13 +215,13 @@ substituteWith parse oms oxs = intercalate "/" $ concat $ snd $ mapAccumL f oms 
     where
         f ms (Lit x) = (ms, [x])
         f (m:ms) Star = (ms, [m])
-        f (m:ms) Skip = (ms, split m)
-        f (m:ms) Skip1 = (ms, split m)
+        f (m:ms) Skip = (ms, splitSep m)
+        f (m:ms) Skip1 = (ms, splitSep m)
         f ms (Stars pre mid post) = (ms2, [concat $ pre : zipWith (++) ms1 (mid++[post])])
             where (ms1,ms2) = splitAt (length mid + 1) ms
         f _ _ = error $ "Substitution failed into pattern " ++ show oxs ++ " with " ++ show (length oms) ++ " matches, namely " ++ show oms
 
-        split = linesBy (== '/')
+        splitSep = linesBy (== '/')
 
 
 ---------------------------------------------------------------------
@@ -221,9 +234,9 @@ data Walk = Walk ([String] -> ([String],[(String,Walk)]))
           | WalkTo            ([String],[(String,Walk)])
 
 walkWith :: (FilePattern -> [Pat]) -> [FilePattern] -> (Bool, Walk)
-walkWith parse ps = (any (\p -> isEmpty p || not (null $ match p [""])) ps2, f ps2)
+walkWith parse patterns = (any (\p -> isEmpty p || not (null $ match p [""])) ps2, f ps2)
     where
-        ps2 = map (filter (/= Lit ".") . optimise . parse) ps
+        ps2 = map (filter (/= Lit ".") . optimise . parse) patterns
 
         f (nubOrd -> ps)
             | all isLit fin, all (isLit . fst) nxt = WalkTo (map fromLit fin, map (fromLit *** f) nxt)
@@ -248,4 +261,5 @@ final (Skip1:xs) = if isEmpty xs then Just Star else Nothing
 final (x:xs) = if isEmpty xs then Just x else Nothing
 final [] = Nothing
 
+isEmpty :: [Pat] -> Bool
 isEmpty = all (== Skip)

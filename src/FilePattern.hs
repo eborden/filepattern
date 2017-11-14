@@ -15,16 +15,12 @@ module FilePattern(
     internalTest, isRelativePath, isRelativePattern
     ) where
 
-import Control.Applicative
 import Control.Monad
-import Data.Char
 import Data.List.Extra
 import Data.Maybe
-import Data.Tuple.Extra
 import FilePattern.Internal
 import Prelude
 import System.FilePath (isPathSeparator)
-import System.Info.Extra
 
 
 ---------------------------------------------------------------------
