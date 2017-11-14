@@ -154,11 +154,11 @@ matchStars Skip _ = Nothing
 matchStars Skip1 _ = Nothing
 
 matchWith :: (FilePattern -> [Pat]) -> FilePattern -> FilePath -> Bool
-matchWith parser pattern = case optimise $ parser pattern of
+matchWith parser pat = case optimise $ parser pat of
     [x] | x == Skip || x == Skip1 -> if rp then isRelativePath else const True
     p -> let f = not . null . match p . split isPathSeparator
          in if rp then (\x -> isRelativePath x && f x) else f
-    where rp = isRelativePattern pattern
+    where rp = isRelativePattern pat
 
 
 -- | Like '?==', but returns 'Nothing' on if there is no match, otherwise 'Just' with the list
