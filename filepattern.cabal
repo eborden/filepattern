@@ -29,6 +29,9 @@ library
         filepath
     exposed-modules:
         FilePattern
+        FilePattern.Legacy
+    other-modules:
+        FilePattern.Internal
 
 
 test-suite filepattern-test
@@ -45,3 +48,4 @@ test-suite filepattern-test
         QuickCheck >= 2.0
     other-modules:
         Test.FilePattern
+        Test.FilePattern.Legacy

@@ -1,8 +1,8 @@
-module Test.FilePattern(main) where
+module Test.FilePattern.Legacy(main) where
 
 import Control.Monad
 import Data.List.Extra
-import FilePattern
+import FilePattern.Legacy
 import GHC.Stack (HasCallStack)
 import System.FilePath (isPathSeparator)
 import System.Info.Extra
@@ -35,19 +35,19 @@ main = do
     internalTest
     let norm = filter (/= ".") . split isPathSeparator
 
-    let f :: HasCallStack => Bool -> FilePattern -> FilePath -> IO ()
-        f b pat file = do
+    let f b pat file = do
             assertBool (b == (pat ?== file)) $ show pat ++ " ?== " ++ show file ++ "\nEXPECTED: " ++ show b
             assertBool (b == walker walk pat file) $ show pat ++ " `walker` " ++ show file ++ "\nEXPECTED: " ++ show b
             when b $ assertBool (norm (substitute (extract pat file) pat) == norm file) $
                 "FAILED substitute/extract property\nPattern: " ++ show pat ++ "\nFile: " ++ show file ++ "\n" ++
                 "Extracted: " ++ show (extract pat file) ++ "\nSubstitute: " ++ show (substitute (extract pat file) pat)
 
-    f True "//*.c" "/baz.c"
+    f True "//*.c" "foo/bar/baz.c"
     f True "**/*.c" "foo/bar/baz.c"
     --f True (toNative "//*.c") "foo/bar\\baz.c"
     --f True (toNative "**/*.c") "foo/bar\\baz.c"
     f True "*.c" "baz.c"
+    f True "//*.c" "baz.c"
     f True "**/*.c" "baz.c"
     f True "test.c" "test.c"
     f False "*.c" "foor/bar.c"
@@ -65,36 +65,40 @@ main = do
     --f True (toNative "foo/bar") (toNative "foo/bar")
     f True "//*" "/bar"
     f False "**/*" "/bar"
-    f True "/bob//foo" "/bob/foo"
+    f True "/bob//foo" "/bob/this/test/foo"
     f True "/bob/**/foo" "/bob/this/test/foo"
     f False "/bob//foo" "bob/this/test/foo"
     f False "/bob/**/foo" "bob/this/test/foo"
-    f True "bob//foo/" "bob/foo/"
+    f True "bob//foo/" "bob/this/test/foo/"
     f True "bob/**/foo/" "bob/this/test/foo/"
     f False "bob//foo/" "bob/this/test/foo"
     f False "bob/**/foo/" "bob/this/test/foo"
-    f True "a//" "a/"
+    f True "a//" "a"
     f True "a/**" "a"
-    f True "/a//" "/a/"
+    f True "/a//" "/a"
     f True "/a/**" "/a"
-    f True "///a//" "/a/"
+    f True "///a//" "/a"
     f False "**/a/**" "/a"
+    f False "///" ""
     f True "///" "/"
     f True "/**" "/"
+    f True "///" "a/"
     f True "**/" "a/"
-    f True "////" "/"
+    f True "////" ""
     f True "**/**" ""
     f True "x///y" "x/y"
     f True "x/**/y" "x/y"
     f True "x///" "x/"
     f True "x/**/" "x/"
+    f True "x///" "x/foo/"
     f True "x/**/" "x/foo/"
     f False "x///" "x"
     f False "x/**/" "x"
+    f True "x///" "x/foo/bar/"
     f True "x/**/" "x/foo/bar/"
     f False "x///" "x/foo/bar"
     f False "x/**/" "x/foo/bar"
-    f True "x///y" "x/y"
+    f True "x///y" "x/z/y"
     f True "x/**/*/y" "x/z/y"
     f True "" ""
     f False "" "y"
@@ -102,13 +106,13 @@ main = do
 
     f True "*/*" "x/y"
     f False "*/*" "x"
-    f True "//*" "/x"
+    f True "//*" "x"
     f True "**/*" "x"
-    f True "//*" "/"
+    f True "//*" ""
     f True "**/*" ""
-    f True "*//" "x/"
+    f True "*//" "x"
     f True "*/**" "x"
-    f True "*//" "/"
+    f True "*//" ""
     f True "*/**" ""
     f True "*//*" "x/y"
     f True "*/**/*" "x/y"
@@ -118,7 +122,7 @@ main = do
     f False "*/**/*" "x"
     f False "*//*//*" "x/y"
     f False "*/**/*/**/*" "x/y"
-    f True "//*/" "//"
+    f True "//*/" "/"
     f False "**/*/" "/"
     f True "*/////" "/"
     f True "*/**/**/" "/"
@@ -146,34 +150,44 @@ main = do
         (if isWindows then ["bar/baz/","foo"] else ["","bar\\baz\\foo"])
 
     simple "a*b" === False
-    simple "a//b" === True
+    simple "a//b" === False
     simple "a/**/b" === False
     simple "/a/b/cccc_" === True
-    simple "a///b" === True
+    simple "a///b" === False
     simple "a/**/b" === False
 
     assertBool (compatible []) "compatible"
     assertBool (compatible ["//*a.txt","foo//a*.txt"]) "compatible"
     assertBool (compatible ["**/*a.txt","foo/**/a*.txt"]) "compatible"
-    assertBool (not $ compatible ["//*a.txt","foo/**/a*.txt"]) "compatible"
+    assertBool (compatible ["//*a.txt","foo/**/a*.txt"]) "compatible"
     assertBool (not $ compatible ["//*a.txt","foo//a*.*txt"]) "compatible"
     assertBool (not $ compatible ["**/*a.txt","foo/**/a*.*txt"]) "compatible"
+    extract "//*a.txt" "foo/bar/testa.txt" === ["foo/bar/","test"]
     extract "**/*a.txt" "foo/bar/testa.txt" === ["foo/bar/","test"]
+    extract "//*a.txt" "testa.txt" === ["","test"]
     extract "**/*a.txt" "testa.txt" === ["","test"]
+    extract "//a.txt" "a.txt" === [""]
     extract "**/a.txt" "a.txt" === [""]
+    extract "//a.txt" "/a.txt" === ["/"]
+    extract "a//b" "a/b" === [""]
     extract "a/**/b" "a/b" === [""]
+    extract "a//b" "a/x/b" === ["x/"]
     extract "a/**/b" "a/x/b" === ["x/"]
+    extract "a//b" "a/x/y/b" === ["x/y/"]
     extract "a/**/b" "a/x/y/b" === ["x/y/"]
+    extract "a///b" "a/x/y/b" === ["x/y/"]
     extract "a/**/**/b" "a/x/y/b" === ["","x/y/"]
+    extract "//*a*.txt" "testada.txt" === ["","test","da"]
     extract "**/*a*.txt" "testada.txt" === ["","test","da"]
     --extract (toNative "//*a*.txt") "testada.txt" === ["","test","da"]
     --extract (toNative "**/*a*.txt") "testada.txt" === ["","test","da"]
-    substitute ["","test","da"] "//*a*.txt" === "/atest.txt"
+    substitute ["","test","da"] "//*a*.txt" === "testada.txt"
     substitute ["","test","da"] "**/*a*.txt" === "testada.txt"
+    substitute  ["foo/bar/","test"] "//*a.txt" === "foo/bar/testa.txt"
     substitute  ["foo/bar/","test"] "**/*a.txt" === "foo/bar/testa.txt"
 
     (False, Walk _) <- return $ walk ["*.xml"]
-    (False, WalkTo _) <- return $ walk ["//*.xml"]
+    (False, Walk _) <- return $ walk ["//*.xml"]
     (False, Walk _) <- return $ walk ["**/*.xml"]
     (False, WalkTo ([], [("foo",Walk _)])) <- return $ walk ["foo//*.xml"]
     (False, WalkTo ([], [("foo",Walk _)])) <- return $ walk ["foo/**/*.xml"]
@@ -183,7 +197,7 @@ main = do
     (False, WalkTo ([],[("bar",Walk _),("baz",Walk _)])) <- return $ walk ["bar/*.xml","baz//*.c"]
     (False, WalkTo ([],[("bar",Walk _),("baz",Walk _)])) <- return $ walk ["bar/*.xml","baz/**/*.c"]
     (False, WalkTo ([], [])) <- return $ walk []
-    (False, WalkTo _) <- return $ walk ["//"]
+    (True, Walk _) <- return $ walk ["//"]
     (True, Walk _) <- return $ walk ["**"]
     (True, WalkTo _) <- return $ walk [""]
 

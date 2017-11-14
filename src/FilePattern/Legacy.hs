@@ -1,8 +1,8 @@
 {-# LANGUAGE PatternGuards #-}
 
-module FilePattern(
+module FilePattern.Legacy(
     -- * Primitive API, as exposed
-    FilePattern, (?==),
+    FilePattern, (?==), (<//>),
     -- * General API, used by other people.
     filePattern,
     -- * Optimisation opportunities
@@ -26,6 +26,16 @@ import Prelude
 import System.FilePath (isPathSeparator)
 import System.Info.Extra
 
+infixr 5 <//>
+
+-- | Join two 'FilePattern' values by inserting two @\/@ characters between them.
+--   Will first remove any trailing path separators on the first argument, and any leading
+--   separators on the second.
+--
+-- > "dir" <//> "*" == "dir//*"
+(<//>) :: FilePattern -> FilePattern -> FilePattern
+a <//> b = dropWhileEnd isPathSeparator a ++ "//" ++ dropWhile isPathSeparator b
+
 
 ---------------------------------------------------------------------
 -- PATTERNS
@@ -33,7 +43,7 @@ import System.Info.Extra
 
 lexer :: FilePattern -> [Lexeme]
 lexer "" = []
-lexer (x1:x2:xs) | isPathSeparator x1, isPathSeparator x2 = lexer (x2:xs)
+lexer (x1:x2:xs) | isPathSeparator x1, isPathSeparator x2 = SlashSlash : lexer xs
 lexer (x1:xs) | isPathSeparator x1 = Slash : lexer xs
 lexer xs = Str a : lexer b
     where (a,b) = break isPathSeparator xs
@@ -52,37 +62,41 @@ internalTest = do
     "x/" # [Lit "x",Lit ""]
     "/x" # [Lit "",Lit "x"]
     "x/y" # [Lit "x",Lit "y"]
-    "//" # [Lit "", Lit ""]
+    "//" # [Skip]
     "**" # [Skip]
-    "//x" # [Lit "", Lit "x"]
+    "//x" # [Skip, Lit "x"]
     "**/x" # [Skip, Lit "x"]
-    "x//" # [Lit "x", Lit ""]
+    "x//" # [Lit "x", Skip]
     "x/**" # [Lit "x", Skip]
-    "x//y" # [Lit "x", Lit "y"]
+    "x//y" # [Lit "x",Skip, Lit "y"]
     "x/**/y" # [Lit "x",Skip, Lit "y"]
-    "///" # [Lit "", Lit ""]
+    "///" # [Skip1, Lit ""]
     "**/**" # [Skip,Skip]
     "**/**/" # [Skip, Skip, Lit ""]
-    "///x" # [Lit "", Lit "x"]
+    "///x" # [Skip1, Lit "x"]
     "**/x" # [Skip, Lit "x"]
-    "x///" # [Lit "x", Lit ""]
+    "x///" # [Lit "x", Skip, Lit ""]
     "x/**/" # [Lit "x", Skip, Lit ""]
-    "x///y" # [Lit "x", Lit "y"]
+    "x///y" # [Lit "x",Skip, Lit "y"]
     "x/**/y" # [Lit "x",Skip, Lit "y"]
-    "////" # [Lit "", Lit ""]
+    "////" # [Skip, Skip]
     "**/**/**" # [Skip, Skip, Skip]
-    "////x" # [Lit "", Lit "x"]
-    "x////" # [Lit "x", Lit ""]
-    "x////y" # [Lit "x", Lit "y"]
-    "**//x" # [Skip, Lit "x"]
+    "////x" # [Skip, Skip, Lit "x"]
+    "x////" # [Lit "x", Skip, Skip]
+    "x////y" # [Lit "x",Skip, Skip, Lit "y"]
+    "**//x" # [Skip, Skip, Lit "x"]
 
 
 -- | Match a 'FilePattern' against a 'FilePath', There are three special forms:
 --
 -- * @*@ matches an entire path component, excluding any separators.
 --
+-- * @\/\/@ matches an arbitrary number of path components, including absolute path
+--   prefixes.
+--
 -- * @**@ as a path component matches an arbitrary number of path components, but not
 --   absolute path prefixes.
+--   Currently considered experimental.
 --
 --   Some examples:
 --
@@ -91,7 +105,7 @@ internalTest = do
 -- * @*.c@ matches all @.c@ files in the current directory, so @file.c@ matches,
 --   but @file.h@ and @dir\/file.c@ don't.
 --
--- * @**/*.c@ matches all @.c@ files anywhere on the filesystem,
+-- * @\/\/*.c@ matches all @.c@ files anywhere on the filesystem,
 --   so @file.c@, @dir\/file.c@, @dir1\/dir2\/file.c@ and @\/path\/to\/file.c@ all match,
 --   but @file.h@ and @dir\/file.h@ don't.
 --
@@ -122,11 +136,11 @@ filePattern = filePatternWith parse
 ---------------------------------------------------------------------
 -- MULTIPATTERN COMPATIBLE SUBSTITUTIONS
 
--- | Is the pattern free from any * and **.
+-- | Is the pattern free from any * and //.
 simple :: FilePattern -> Bool
 simple = simpleWith parse
 
--- | Do they have the same * and ** counts in the same order
+-- | Do they have the same * and // counts in the same order
 compatible :: [FilePattern] -> Bool
 compatible = compatibleWith parse
 
