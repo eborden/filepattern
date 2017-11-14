@@ -10,6 +10,7 @@ maintainer:         Evan Rutledge Borden <evan@evan-borden.com>
 copyright:          Neil Mitchell 2011-2017
 synopsis:           File path matching
 description:
+    A file pattern library
 bug-reports:        https://github.com/eborden/filepattern/issues
 tested-with:        GHC==8.2.1, GHC==8.0.2, GHC==7.10.3, GHC==7.8.4, GHC==7.6.3, GHC==7.4.2
 extra-doc-files:
