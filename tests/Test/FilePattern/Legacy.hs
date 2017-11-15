@@ -3,18 +3,17 @@ module Test.FilePattern.Legacy(main) where
 import Control.Monad
 import Data.List.Extra
 import FilePattern.Legacy
-import GHC.Stack (HasCallStack)
 import System.FilePath (isPathSeparator)
 import System.Info.Extra
 import System.IO.Unsafe
 import Test.QuickCheck hiding ((===))
 
-assertBool :: HasCallStack => Bool -> String -> IO ()
+assertBool :: Bool -> String -> IO ()
 assertBool b msg = unless b $ error $ "ASSERTION FAILED: " ++ msg
 
 infix 4 ===
 
-(===) :: (HasCallStack, Show a, Eq a) => a -> a -> IO ()
+(===) :: (Show a, Eq a) => a -> a -> IO ()
 a === b = assertBool (a == b) $ "failed in ===\nLHS: " ++ show a ++ "\nRHS: " ++ show b
 
 newtype Pattern = Pattern FilePattern deriving (Show,Eq)

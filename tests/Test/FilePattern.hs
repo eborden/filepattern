@@ -3,18 +3,17 @@ module Test.FilePattern(main) where
 import Control.Monad
 import Data.List.Extra
 import FilePattern
-import GHC.Stack (HasCallStack)
 import System.FilePath (isPathSeparator)
 import System.Info.Extra
 import System.IO.Unsafe
 import Test.QuickCheck hiding ((===))
 
-assertBool :: HasCallStack => Bool -> String -> IO ()
+assertBool :: Bool -> String -> IO ()
 assertBool b msg = unless b $ error $ "ASSERTION FAILED: " ++ msg
 
 infix 4 ===
 
-(===) :: (HasCallStack, Show a, Eq a) => a -> a -> IO ()
+(===) :: (Show a, Eq a) => a -> a -> IO ()
 a === b = assertBool (a == b) $ "failed in ===\nLHS: " ++ show a ++ "\nRHS: " ++ show b
 
 newtype Pattern = Pattern FilePattern deriving (Show,Eq)
@@ -35,7 +34,7 @@ main = do
     internalTest
     let norm = filter (/= ".") . split isPathSeparator
 
-    let f :: HasCallStack => Bool -> FilePattern -> FilePath -> IO ()
+    let f :: Bool -> FilePattern -> FilePath -> IO ()
         f b pat file = do
             assertBool (b == (pat ?== file)) $ show pat ++ " ?== " ++ show file ++ "\nEXPECTED: " ++ show b
             assertBool (b == walker walk pat file) $ show pat ++ " `walker` " ++ show file ++ "\nEXPECTED: " ++ show b
