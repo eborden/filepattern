@@ -49,6 +49,7 @@ parse :: FilePattern -> [Pat]
 parse = parseWith lexer
 
 
+-- | Used for internal testing
 internalTest :: IO ()
 internalTest = do
     let x # y = when (parse x /= y) $ fail $ show ("FilePattern.internalTest",x,parse x,y)
@@ -154,5 +155,6 @@ substitute = substituteWith parse
 ---------------------------------------------------------------------
 -- EFFICIENT PATH WALKING
 
+-- | Efficient path walking with a pattern
 walk :: [FilePattern] -> (Bool, Walk)
 walk = walkWith parse
