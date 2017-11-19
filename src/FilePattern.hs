@@ -1,5 +1,10 @@
 {-# LANGUAGE PatternGuards #-}
 
+-- | A module for pattern matching on file names.
+--
+-- >>> "/**/*.png" ?== "/foo/bar/baz.png"
+-- True
+
 module FilePattern(
     -- * Primitive API, as exposed
     FilePattern, (?==),
