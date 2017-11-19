@@ -6,9 +6,9 @@
 -- True
 
 module FilePattern(
-    -- * Primitive API, as exposed
+    -- * Primitive API
     FilePattern, (?==),
-    -- * General API, used by other people.
+    -- * General API
     filePattern,
     -- * Optimisation opportunities
     simple,
