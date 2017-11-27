@@ -22,6 +22,8 @@ module FilePattern.Legacy
     compatible, extract, substitute,
     -- * Accelerated searching
     Walk(..), walk,
+    -- * Deprecation path
+    addUnsafeLegacyWarning,
     -- * Testing only
     internalTest, isRelativePath, isRelativePattern
     ) where
@@ -29,20 +31,46 @@ module FilePattern.Legacy
 import Control.Monad
 import Data.List.Extra
 import Data.Maybe
+import Data.IORef
+import System.IO.Unsafe
 import FilePattern.Internal
 import Prelude
 import System.FilePath (isPathSeparator)
 
 
 ---------------------------------------------------------------------
+-- LEGACY WARNING
+
+{-# NOINLINE legacyWarning #-}
+legacyWarning :: IORef (FilePattern -> IO ())
+legacyWarning = unsafePerformIO $ newIORef $ const $ return ()
+
+-- | Add a callback that is run on every pattern containing @\/\/@.
+--   Note that the callback will be run via 'unsafePerformIO'.
+addUnsafeLegacyWarning :: (FilePattern -> IO ()) -> IO ()
+addUnsafeLegacyWarning act = atomicModifyIORef legacyWarning $ \old -> (old >> act, ())
+
+{-# NOINLINE traceLegacyWarning #-}
+traceLegacyWarning :: FilePattern -> a -> a
+traceLegacyWarning pat x = unsafePerformIO $ do
+    warn <- readIORef legacyWarning
+    warn pat
+    return x
+
+
+---------------------------------------------------------------------
 -- PATTERNS
 
 lexer :: FilePattern -> [Lexeme]
-lexer "" = []
-lexer (x1:x2:xs) | isPathSeparator x1, isPathSeparator x2 = SlashSlash : lexer xs
-lexer (x1:xs) | isPathSeparator x1 = Slash : lexer xs
-lexer xs = Str a : lexer b
-    where (a,b) = break isPathSeparator xs
+lexer x = f x x
+    where
+        -- first argument is the original full pattern, or "" if we've already warned
+        f o "" = []
+        f o (x1:x2:xs) | isPathSeparator x1, isPathSeparator x2 =
+            (if o == "" then id else traceLegacyWarning o) $ SlashSlash : f "" xs
+        f o (x1:xs) | isPathSeparator x1 = Slash : f o xs
+        f o xs = Str a : f o b
+            where (a,b) = break isPathSeparator xs
 
 
 parse :: FilePattern -> [Pat]
