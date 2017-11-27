@@ -13,7 +13,7 @@ module FilePattern.Legacy
     {-# DEPRECATED "Use module FilePattern and avoid // in the patterns" #-}
     (
     -- * Primitive API
-    FilePattern, (?==), (<//>),
+    FilePattern, (?==),
     -- * General API
     filePattern,
     -- * Optimisation opportunities
@@ -33,20 +33,9 @@ import FilePattern.Internal
 import Prelude
 import System.FilePath (isPathSeparator)
 
-infixr 5 <//>
-
--- | Join two 'FilePattern' values by inserting two @\/@ characters between them.
---   Will first remove any trailing path separators on the first argument, and any leading
---   separators on the second.
---
--- > "dir" <//> "*" == "dir//*"
-(<//>) :: FilePattern -> FilePattern -> FilePattern
-a <//> b = dropWhileEnd isPathSeparator a ++ "//" ++ dropWhile isPathSeparator b
-
 
 ---------------------------------------------------------------------
 -- PATTERNS
-
 
 lexer :: FilePattern -> [Lexeme]
 lexer "" = []
