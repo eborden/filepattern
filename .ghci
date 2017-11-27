@@ -1,3 +1,3 @@
 :set -fwarn-unused-binds -fwarn-unused-imports -fwarn-orphans
-:set -i
-:set -isrc
+:set -isrc;tests
+:load tests/Test.hs
