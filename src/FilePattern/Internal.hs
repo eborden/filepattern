@@ -28,21 +28,14 @@ import System.FilePath (isPathSeparator)
 import System.Info.Extra
 
 
--- | A type synonym for file patterns, containing @\/\/@ and @*@. For the syntax
+-- | A type synonym for file patterns, containing @**@ and @*@. For the syntax
 --   and semantics of 'FilePattern' see '?=='.
 --
---   Most 'normaliseEx'd 'FilePath' values are suitable as 'FilePattern' values which match
+--   Most 'FilePath' values lacking @.@ and @..@ are suitable as 'FilePattern' values which match
 --   only that specific file. On Windows @\\@ is treated as equivalent to @\/@.
 --
 --   You can write 'FilePattern' values as a literal string, or build them
---   up using the operators 'Development.Shake.FilePath.<.>', 'Development.Shake.FilePath.</>'
---   and 'Development.Shake.<//>'. However, beware that:
---
--- * On Windows, use 'Development.Shake.FilePath.<.>' from "Development.Shake.FilePath" instead of from
---   "System.FilePath" - otherwise @\"\/\/*\" \<.\> exe@ results in @\"\/\/*\\\\.exe\"@.
---
--- * If the second argument of 'Development.Shake.FilePath.</>' has a leading path separator (namely @\/@)
---   then the second argument will be returned.
+--   up using the operators '<.>' and '</>'.
 type FilePattern = String
 
 

@@ -4,8 +4,12 @@
 --
 -- >>> "//*.png" ?== "/foo/bar/baz.png"
 -- True
-
 module FilePattern.Legacy(
+--
+--   This module supports @*@ and @**@ like "FilePattern", and also supports @\/\/@.
+--   The inclusion of @//@ in patterns was a misfeature, as it interacts poorly with
+--   'Development.Shake.FilePath.<.>' and 'Development.Shake.FilePath.</>'.
+--   This module will be deleted at some point in the future.
     -- * Primitive API
     FilePattern, (?==), (<//>),
     -- * General API
@@ -121,38 +125,26 @@ internalTest = do
 (?==) = matchWith parse
 
 
--- | Like '?==', but returns 'Nothing' on if there is no match, otherwise 'Just' with the list
---   of fragments matching each wildcard. For example:
---
--- @
--- 'filePattern' \"**\/*.c\" \"test.txt\" == Nothing
--- 'filePattern' \"**\/*.c\" \"foo.c\" == Just [\"",\"foo\"]
--- 'filePattern' \"**\/*.c\" \"bar\/baz\/foo.c\" == Just [\"bar\/baz/\",\"foo\"]
--- @
---
---   Note that the @**@ will often contain a trailing @\/@, and even on Windows any
---   @\\@ separators will be replaced by @\/@.
+-- | Like 'FilePattern.filePattern' but also deals with @\/\/@ patterns.
 filePattern :: FilePattern -> FilePath -> Maybe [String]
 filePattern = filePatternWith parse
 
 ---------------------------------------------------------------------
 -- MULTIPATTERN COMPATIBLE SUBSTITUTIONS
 
--- | Is the pattern free from any * and //.
+-- | Like 'FilePattern.simple' but also deals with @\/\/@ patterns.
 simple :: FilePattern -> Bool
 simple = simpleWith parse
 
--- | Do they have the same * and // counts in the same order
+-- | Like 'FilePattern.compatible' but also deals with @\/\/@ patterns.
 compatible :: [FilePattern] -> Bool
 compatible = compatibleWith parse
 
--- | Extract the items that match the wildcards. The pair must match with '?=='.
+-- | Like 'FilePattern.extract' but also deals with @\/\/@ patterns.
 extract :: FilePattern -> FilePath -> [String]
 extract = extractWith parse
 
--- | Given the result of 'extract', substitute it back in to a 'compatible' pattern.
---
--- > p '?==' x ==> substitute (extract p x) p == x
+-- | Like 'FilePattern.substitute' but also deals with @\/\/@ patterns.
 substitute :: [String] -> FilePattern -> FilePath
 substitute = substituteWith parse
 
@@ -160,6 +152,6 @@ substitute = substituteWith parse
 ---------------------------------------------------------------------
 -- EFFICIENT PATH WALKING
 
--- | Efficient path walking with a pattern
+-- | Like 'FilePattern.walk' but also deals with @\/\/@ patterns.
 walk :: [FilePattern] -> (Bool, Walk)
 walk = walkWith parse
