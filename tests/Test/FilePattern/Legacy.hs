@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-deprecations #-}
+
 module Test.FilePattern.Legacy(main) where
 
 import Control.Monad

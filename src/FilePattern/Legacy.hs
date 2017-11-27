@@ -4,12 +4,14 @@
 --
 -- >>> "//*.png" ?== "/foo/bar/baz.png"
 -- True
-module FilePattern.Legacy(
 --
 --   This module supports @*@ and @**@ like "FilePattern", and also supports @\/\/@.
 --   The inclusion of @//@ in patterns was a misfeature, as it interacts poorly with
 --   'Development.Shake.FilePath.<.>' and 'Development.Shake.FilePath.</>'.
 --   This module will be deleted at some point in the future.
+module FilePattern.Legacy
+    {-# DEPRECATED "Use module FilePattern and avoid // in the patterns" #-}
+    (
     -- * Primitive API
     FilePattern, (?==), (<//>),
     -- * General API
