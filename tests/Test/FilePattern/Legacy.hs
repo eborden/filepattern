@@ -2,11 +2,13 @@
 
 module Test.FilePattern.Legacy(main) where
 
+import Control.Exception
 import Control.Monad
 import Data.List.Extra
 import FilePattern.Legacy
 import System.FilePath (isPathSeparator)
 import System.Info.Extra
+import Data.IORef
 import System.IO.Unsafe
 import Test.QuickCheck hiding ((===))
 
@@ -33,6 +35,7 @@ instance Arbitrary Path where
 
 
 main = do
+    legacyTest
     internalTest
     let norm = filter (/= ".") . split isPathSeparator
 
@@ -208,6 +211,24 @@ main = do
             -- See #450 and https://github.com/nick8325/quickcheck/pull/93
         let b = p ?== x in (if b then property else label "No match") $ unsafePerformIO $ do f b p x; return True
     return ()
+
+
+legacyTest :: IO ()
+legacyTest = do
+    ref <- newIORef Nothing
+    addUnsafeLegacyWarning $ \x -> modifyIORef ref $ fmap (++ [x])
+
+    let f b x = do
+            writeIORef ref $ Just []
+            evaluate $ compatible [x,x]
+            res <- readIORef ref
+            writeIORef ref Nothing -- to avoid a memory leak
+            res === Just (if b then [x,x] else [])
+
+    f False "foo/**/x"
+    f True  "foo/x//y"
+    f True  "foo//x//y"
+    f False "foo/**/x/*.foo"
 
 
 walker :: ([FilePattern] -> (Bool, Walk)) -> FilePattern -> FilePath -> Bool
