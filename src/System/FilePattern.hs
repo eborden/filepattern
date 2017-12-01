@@ -15,12 +15,9 @@ module System.FilePattern(
     -- * Multipattern file rules
     compatible, extract, substitute,
     -- * Accelerated searching
-    Walk(..), walk,
-    -- * Testing only
-    internalTest, isRelativePath, isRelativePattern
+    Walk(..), walk
     ) where
 
-import Control.Monad
 import Data.Maybe
 import System.FilePattern.Internal
 import System.FilePattern.Parser(parse)
@@ -29,41 +26,6 @@ import Prelude
 
 ---------------------------------------------------------------------
 -- PATTERNS
-
--- | Used for internal testing
-internalTest :: IO ()
-internalTest = do
-    let x # y = when (parse x /= y) $ fail $ show ("FilePattern.internalTest",x,parse x,y)
-    "" # [Lit ""]
-    "x" # [Lit "x"]
-    "/" # [Lit "",Lit ""]
-    "x/" # [Lit "x",Lit ""]
-    "/x" # [Lit "",Lit "x"]
-    "x/y" # [Lit "x",Lit "y"]
-    "//" # [Lit "", Lit ""]
-    "**" # [Skip]
-    "//x" # [Lit "", Lit "x"]
-    "**/x" # [Skip, Lit "x"]
-    "x//" # [Lit "x", Lit ""]
-    "x/**" # [Lit "x", Skip]
-    "x//y" # [Lit "x", Lit "y"]
-    "x/**/y" # [Lit "x",Skip, Lit "y"]
-    "///" # [Lit "", Lit ""]
-    "**/**" # [Skip,Skip]
-    "**/**/" # [Skip, Skip, Lit ""]
-    "///x" # [Lit "", Lit "x"]
-    "**/x" # [Skip, Lit "x"]
-    "x///" # [Lit "x", Lit ""]
-    "x/**/" # [Lit "x", Skip, Lit ""]
-    "x///y" # [Lit "x", Lit "y"]
-    "x/**/y" # [Lit "x",Skip, Lit "y"]
-    "////" # [Lit "", Lit ""]
-    "**/**/**" # [Skip, Skip, Skip]
-    "////x" # [Lit "", Lit "x"]
-    "x////" # [Lit "x", Lit ""]
-    "x////y" # [Lit "x", Lit "y"]
-    "**//x" # [Skip, Lit "x"]
-
 
 -- | Match a 'FilePattern' against a 'FilePath', There are three special forms:
 --

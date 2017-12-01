@@ -3,6 +3,8 @@ module Test.FilePattern(main) where
 import Control.Monad
 import Data.List.Extra
 import System.FilePattern
+import System.FilePattern.Internal
+import System.FilePattern.Parser
 import System.FilePath (isPathSeparator)
 import System.Info.Extra
 import System.IO.Unsafe
@@ -28,6 +30,41 @@ instance Arbitrary Pattern where
 instance Arbitrary Path where
     arbitrary = fmap Path $ listOf $ elements "\\/ab"
     shrink (Path x) = map Path $ shrinkList (\x -> ['/' | x == '\\']) x
+
+
+-- | Used for internal testing
+internalTest :: IO ()
+internalTest = do
+    let x # y = when (parse x /= y) $ fail $ show ("FilePattern.internalTest",x,parse x,y)
+    "" # [Lit ""]
+    "x" # [Lit "x"]
+    "/" # [Lit "",Lit ""]
+    "x/" # [Lit "x",Lit ""]
+    "/x" # [Lit "",Lit "x"]
+    "x/y" # [Lit "x",Lit "y"]
+    "//" # [Lit "", Lit ""]
+    "**" # [Skip]
+    "//x" # [Lit "", Lit "x"]
+    "**/x" # [Skip, Lit "x"]
+    "x//" # [Lit "x", Lit ""]
+    "x/**" # [Lit "x", Skip]
+    "x//y" # [Lit "x", Lit "y"]
+    "x/**/y" # [Lit "x",Skip, Lit "y"]
+    "///" # [Lit "", Lit ""]
+    "**/**" # [Skip,Skip]
+    "**/**/" # [Skip, Skip, Lit ""]
+    "///x" # [Lit "", Lit "x"]
+    "**/x" # [Skip, Lit "x"]
+    "x///" # [Lit "x", Lit ""]
+    "x/**/" # [Lit "x", Skip, Lit ""]
+    "x///y" # [Lit "x", Lit "y"]
+    "x/**/y" # [Lit "x",Skip, Lit "y"]
+    "////" # [Lit "", Lit ""]
+    "**/**/**" # [Skip, Skip, Skip]
+    "////x" # [Lit "", Lit "x"]
+    "x////" # [Lit "x", Lit ""]
+    "x////y" # [Lit "x", Lit "y"]
+    "**//x" # [Skip, Lit "x"]
 
 
 main = do

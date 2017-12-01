@@ -23,12 +23,9 @@ module System.FilePattern.Legacy
     -- * Accelerated searching
     Walk(..), walk,
     -- * Deprecation path
-    addUnsafeLegacyWarning,
-    -- * Testing only
-    internalTest, isRelativePath, isRelativePattern
+    addUnsafeLegacyWarning
     ) where
 
-import Control.Monad
 import Data.Maybe
 import System.FilePattern.Internal
 import System.FilePattern.Parser(parseLegacy, addUnsafeLegacyWarning)
@@ -37,41 +34,6 @@ import Prelude
 
 ---------------------------------------------------------------------
 -- PATTERNS
-
--- | Used for internal testing
-internalTest :: IO ()
-internalTest = do
-    let x # y = when (parseLegacy x /= y) $ fail $ show ("FilePattern.internalTest",x,parseLegacy x,y)
-    "" # [Lit ""]
-    "x" # [Lit "x"]
-    "/" # [Lit "",Lit ""]
-    "x/" # [Lit "x",Lit ""]
-    "/x" # [Lit "",Lit "x"]
-    "x/y" # [Lit "x",Lit "y"]
-    "//" # [Skip]
-    "**" # [Skip]
-    "//x" # [Skip, Lit "x"]
-    "**/x" # [Skip, Lit "x"]
-    "x//" # [Lit "x", Skip]
-    "x/**" # [Lit "x", Skip]
-    "x//y" # [Lit "x",Skip, Lit "y"]
-    "x/**/y" # [Lit "x",Skip, Lit "y"]
-    "///" # [Skip1, Lit ""]
-    "**/**" # [Skip,Skip]
-    "**/**/" # [Skip, Skip, Lit ""]
-    "///x" # [Skip1, Lit "x"]
-    "**/x" # [Skip, Lit "x"]
-    "x///" # [Lit "x", Skip, Lit ""]
-    "x/**/" # [Lit "x", Skip, Lit ""]
-    "x///y" # [Lit "x",Skip, Lit "y"]
-    "x/**/y" # [Lit "x",Skip, Lit "y"]
-    "////" # [Skip, Skip]
-    "**/**/**" # [Skip, Skip, Skip]
-    "////x" # [Skip, Skip, Lit "x"]
-    "x////" # [Lit "x", Skip, Skip]
-    "x////y" # [Lit "x",Skip, Skip, Lit "y"]
-    "**//x" # [Skip, Skip, Lit "x"]
-
 
 -- | Match a 'FilePattern' against a 'FilePath', There are three special forms:
 --
