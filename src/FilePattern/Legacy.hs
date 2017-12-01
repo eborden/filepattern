@@ -29,58 +29,19 @@ module FilePattern.Legacy
     ) where
 
 import Control.Monad
-import Data.List.Extra
 import Data.Maybe
-import Data.IORef
-import System.IO.Unsafe
 import FilePattern.Internal
+import FilePattern.Parser(parseLegacy, addUnsafeLegacyWarning)
 import Prelude
-import System.FilePath (isPathSeparator)
-
-
----------------------------------------------------------------------
--- LEGACY WARNING
-
-{-# NOINLINE legacyWarning #-}
-legacyWarning :: IORef (FilePattern -> IO ())
-legacyWarning = unsafePerformIO $ newIORef $ const $ return ()
-
--- | Add a callback that is run on every pattern containing @\/\/@.
---   Note that the callback will be run via 'unsafePerformIO'.
-addUnsafeLegacyWarning :: (FilePattern -> IO ()) -> IO ()
-addUnsafeLegacyWarning act = atomicModifyIORef legacyWarning $ \old -> (old >> act, ())
-
-{-# NOINLINE traceLegacyWarning #-}
-traceLegacyWarning :: FilePattern -> a -> a
-traceLegacyWarning pat x = unsafePerformIO $ do
-    warn <- readIORef legacyWarning
-    warn pat
-    return x
 
 
 ---------------------------------------------------------------------
 -- PATTERNS
 
-lexer :: FilePattern -> [Lexeme]
-lexer x = f x x
-    where
-        -- first argument is the original full pattern, or "" if we've already warned
-        f o "" = []
-        f o (x1:x2:xs) | isPathSeparator x1, isPathSeparator x2 =
-            (if o == "" then id else traceLegacyWarning o) $ SlashSlash : f "" xs
-        f o (x1:xs) | isPathSeparator x1 = Slash : f o xs
-        f o xs = Str a : f o b
-            where (a,b) = break isPathSeparator xs
-
-
-parse :: FilePattern -> [Pat]
-parse = parseWith lexer
-
-
 -- | Used for internal testing
 internalTest :: IO ()
 internalTest = do
-    let x # y = when (parse x /= y) $ fail $ show ("FilePattern.internalTest",x,parse x,y)
+    let x # y = when (parseLegacy x /= y) $ fail $ show ("FilePattern.internalTest",x,parseLegacy x,y)
     "" # [Lit ""]
     "x" # [Lit "x"]
     "/" # [Lit "",Lit ""]
@@ -141,31 +102,31 @@ internalTest = do
 --   Patterns with constructs such as @foo\/..\/bar@ will never match
 --   normalised 'FilePath' values, so are unlikely to be correct.
 (?==) :: FilePattern -> FilePath -> Bool
-(?==) = matchWith parse
+(?==) = matchWith parseLegacy
 
 
 -- | Like 'FilePattern.filePattern' but also deals with @\/\/@ patterns.
 filePattern :: FilePattern -> FilePath -> Maybe [String]
-filePattern = filePatternWith parse
+filePattern = filePatternWith parseLegacy
 
 ---------------------------------------------------------------------
 -- MULTIPATTERN COMPATIBLE SUBSTITUTIONS
 
 -- | Like 'FilePattern.simple' but also deals with @\/\/@ patterns.
 simple :: FilePattern -> Bool
-simple = simpleWith parse
+simple = simpleWith parseLegacy
 
 -- | Like 'FilePattern.compatible' but also deals with @\/\/@ patterns.
 compatible :: [FilePattern] -> Bool
-compatible = compatibleWith parse
+compatible = compatibleWith parseLegacy
 
 -- | Like 'FilePattern.extract' but also deals with @\/\/@ patterns.
 extract :: FilePattern -> FilePath -> [String]
-extract = extractWith parse
+extract = extractWith parseLegacy
 
 -- | Like 'FilePattern.substitute' but also deals with @\/\/@ patterns.
 substitute :: [String] -> FilePattern -> FilePath
-substitute = substituteWith parse
+substitute = substituteWith parseLegacy
 
 
 ---------------------------------------------------------------------
@@ -173,4 +134,4 @@ substitute = substituteWith parse
 
 -- | Like 'FilePattern.walk' but also deals with @\/\/@ patterns.
 walk :: [FilePattern] -> (Bool, Walk)
-walk = walkWith parse
+walk = walkWith parseLegacy

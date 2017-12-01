@@ -16,9 +16,7 @@ module FilePattern.Internal(
     -- * Accelerated searching
     Walk(..), walkWith,
     -- * Testing only
-    isRelativePath, isRelativePattern,
-    -- * Internal use only
-    Lexeme(..), Pat(..), parseWith
+    Pat(..), isRelativePath, isRelativePattern
     ) where
 
 import Control.Applicative
@@ -60,33 +58,6 @@ isLit _ = False
 fromLit :: Pat -> String
 fromLit (Lit x) = x
 fromLit _ = error "fromLit: applied to non Lit"
-
-
-data Lexeme = Str String | Slash | SlashSlash
-
-
--- | Parse a FilePattern with a given lexer. All optimisations I can think of are invalid because they change the extracted expressions.
-parseWith :: (FilePattern -> [Lexeme]) -> FilePattern -> [Pat]
-parseWith lexer = f False True . lexer
-    where
-        -- str = I have ever seen a Str go past (equivalent to "can I be satisfied by no paths")
-        -- slash = I am either at the start, or my previous character was Slash
-        f _ slash [] = [Lit "" | slash]
-        f _ _ (Str "**":xs) = Skip : f True False xs
-        f _ _ (Str x:xs) = parseLit x : f True False xs
-        f str _ (SlashSlash:Slash:xs) | not str = Skip1 : f str True xs
-        f str _ (SlashSlash:xs) = Skip : f str False xs
-        f str _ (Slash:xs) = [Lit "" | not str] ++ f str True xs
-
-
-parseLit :: String -> Pat
-parseLit "*" = Star
-parseLit x = case split (== '*') x of
-    [] -> error "parseLit: given empty string"
-    [y] -> Lit y
-    pre:xs -> case unsnoc xs of
-        Nothing -> error "parseLit: Stars check failed"
-        Just (mid,post) -> Stars pre mid post
 
 
 -- | Optimisations that may change the matched expressions

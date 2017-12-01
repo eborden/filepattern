@@ -21,28 +21,14 @@ module FilePattern(
     ) where
 
 import Control.Monad
-import Data.List.Extra
 import Data.Maybe
 import FilePattern.Internal
+import FilePattern.Parser(parse)
 import Prelude
-import System.FilePath (isPathSeparator)
 
 
 ---------------------------------------------------------------------
 -- PATTERNS
-
-
-lexer :: FilePattern -> [Lexeme]
-lexer "" = []
-lexer (x1:x2:xs) | isPathSeparator x1, isPathSeparator x2 = lexer (x2:xs)
-lexer (x1:xs) | isPathSeparator x1 = Slash : lexer xs
-lexer xs = Str a : lexer b
-    where (a,b) = break isPathSeparator xs
-
-
-parse :: FilePattern -> [Pat]
-parse = parseWith lexer
-
 
 -- | Used for internal testing
 internalTest :: IO ()

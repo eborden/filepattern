@@ -34,6 +34,7 @@ library
         FilePattern.Legacy
     other-modules:
         FilePattern.Internal
+        FilePattern.Parser
 
 
 test-suite filepattern-test
