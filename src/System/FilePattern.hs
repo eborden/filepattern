@@ -5,7 +5,7 @@
 -- >>> "/**/*.png" ?== "/foo/bar/baz.png"
 -- True
 
-module FilePattern(
+module System.FilePattern(
     -- * Primitive API
     FilePattern, (?==),
     -- * General API
@@ -22,8 +22,8 @@ module FilePattern(
 
 import Control.Monad
 import Data.Maybe
-import FilePattern.Internal
-import FilePattern.Parser(parse)
+import System.FilePattern.Internal
+import System.FilePattern.Parser(parse)
 import Prelude
 
 

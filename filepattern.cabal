@@ -30,11 +30,11 @@ library
         extra >= 1.5.3,
         filepath
     exposed-modules:
-        FilePattern
-        FilePattern.Legacy
+        System.FilePattern
+        System.FilePattern.Legacy
     other-modules:
-        FilePattern.Internal
-        FilePattern.Parser
+        System.FilePattern.Internal
+        System.FilePattern.Parser
 
 
 test-suite filepattern-test

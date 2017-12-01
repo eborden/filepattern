@@ -1,7 +1,7 @@
 {-# LANGUAGE PatternGuards #-}
 
 -- | Parsers for the flavours of 'FilePattern'.
-module FilePattern.Parser(
+module System.FilePattern.Parser(
     parse,
     parseLegacy,
     addUnsafeLegacyWarning
@@ -12,7 +12,7 @@ import Data.List.Extra
 import Data.Maybe
 import Data.IORef
 import System.IO.Unsafe
-import FilePattern.Internal
+import System.FilePattern.Internal
 import Prelude
 import System.FilePath (isPathSeparator)
 

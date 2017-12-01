@@ -2,7 +2,7 @@ module Test.FilePattern(main) where
 
 import Control.Monad
 import Data.List.Extra
-import FilePattern
+import System.FilePattern
 import System.FilePath (isPathSeparator)
 import System.Info.Extra
 import System.IO.Unsafe

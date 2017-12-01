@@ -5,7 +5,7 @@ module Test.FilePattern.Legacy(main) where
 import Control.Exception
 import Control.Monad
 import Data.List.Extra
-import FilePattern.Legacy
+import System.FilePattern.Legacy
 import System.FilePath (isPathSeparator)
 import System.Info.Extra
 import Data.IORef

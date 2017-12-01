@@ -9,7 +9,7 @@
 --   The inclusion of @//@ in patterns was a misfeature, as it interacts poorly with
 --   'Development.Shake.FilePath.<.>' and 'Development.Shake.FilePath.</>'.
 --   This module will be deleted at some point in the future.
-module FilePattern.Legacy
+module System.FilePattern.Legacy
     {-# DEPRECATED "Use module FilePattern and avoid // in the patterns" #-}
     (
     -- * Primitive API
@@ -30,8 +30,8 @@ module FilePattern.Legacy
 
 import Control.Monad
 import Data.Maybe
-import FilePattern.Internal
-import FilePattern.Parser(parseLegacy, addUnsafeLegacyWarning)
+import System.FilePattern.Internal
+import System.FilePattern.Parser(parseLegacy, addUnsafeLegacyWarning)
 import Prelude
 
 
