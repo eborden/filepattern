@@ -7,7 +7,7 @@ import Control.Monad
 import Data.List.Extra
 import System.FilePattern.Legacy
 import System.FilePattern.Parser
-import System.FilePattern.Internal
+import System.FilePattern.Core
 import System.FilePath (isPathSeparator)
 import System.Info.Extra
 import Data.IORef

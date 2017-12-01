@@ -12,7 +12,7 @@ import Data.List.Extra
 import Data.Maybe
 import Data.IORef
 import System.IO.Unsafe
-import System.FilePattern.Internal
+import System.FilePattern.Core
 import Prelude
 import System.FilePath (isPathSeparator)
 

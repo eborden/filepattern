@@ -19,7 +19,7 @@ module System.FilePattern(
     ) where
 
 import Data.Maybe
-import System.FilePattern.Internal
+import System.FilePattern.Core
 import System.FilePattern.Parser(parse)
 import Prelude
 

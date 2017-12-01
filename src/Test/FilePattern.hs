@@ -3,7 +3,7 @@ module Test.FilePattern(main) where
 import Control.Monad
 import Data.List.Extra
 import System.FilePattern
-import System.FilePattern.Internal
+import System.FilePattern.Core
 import System.FilePattern.Parser
 import System.FilePath (isPathSeparator)
 import System.Info.Extra

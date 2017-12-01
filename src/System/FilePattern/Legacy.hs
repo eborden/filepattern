@@ -27,7 +27,7 @@ module System.FilePattern.Legacy
     ) where
 
 import Data.Maybe
-import System.FilePattern.Internal
+import System.FilePattern.Core
 import System.FilePattern.Parser(parseLegacy, addUnsafeLegacyWarning)
 import Prelude
 

@@ -4,7 +4,7 @@
 -- | This library supports patterns containing @*@ and @**@, but also
 --   \"legacy\" patterns including @\/\/@ as well.
 --   To support that, we have 'with' patterns that are customized by the lexer.
-module System.FilePattern.Internal(
+module System.FilePattern.Core(
     -- * Primitive API, as exposed
     FilePattern, matchWith,
     -- * General API, used by other people.

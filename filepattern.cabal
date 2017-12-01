@@ -33,7 +33,7 @@ library
         System.FilePattern
         System.FilePattern.Legacy
     other-modules:
-        System.FilePattern.Internal
+        System.FilePattern.Core
         System.FilePattern.Parser
 
 
@@ -50,4 +50,4 @@ test-suite filepattern-test
         QuickCheck >= 2.0
     other-modules:
         Test.FilePattern
-        Test.FilePattern.Legacy
+        Test.FilePattern.Core
