@@ -18,7 +18,7 @@ module FilePattern.Internal(
     -- * Testing only
     isRelativePath, isRelativePattern,
     -- * Internal use only
-    Lexeme(..), Pat(Lit, Skip, Skip1), parseWith
+    Lexeme(..), Pat(..), parseWith
     ) where
 
 import Control.Applicative
