@@ -88,7 +88,7 @@ extract = extractWith parse
 --
 -- > p '?==' x ==> substitute (extract p x) p == x
 substitute :: [String] -> FilePattern -> FilePath
-substitute = substituteWith parse
+substitute xs = substituteWith xs . parse
 
 
 ---------------------------------------------------------------------
@@ -96,4 +96,4 @@ substitute = substituteWith parse
 
 -- | Efficient path walking with a pattern
 walk :: [FilePattern] -> (Bool, Walk)
-walk = walkWith parse
+walk = walkWith . map parse

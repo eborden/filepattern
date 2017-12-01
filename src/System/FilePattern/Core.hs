@@ -177,8 +177,8 @@ extractWith parse p = let pat = parse p in \x ->
 -- | Given the result of 'extract', substitute it back in to a 'compatible' pattern.
 --
 -- > p '?==' x ==> substitute (extract p x) p == x
-substituteWith :: (FilePattern -> [Pat]) -> [String] -> FilePattern -> FilePath
-substituteWith parse oms oxs = intercalate "/" $ concat $ snd $ mapAccumL f oms (parse oxs)
+substituteWith :: [String] -> [Pat] -> FilePath
+substituteWith oms oxs = intercalate "/" $ concat $ snd $ mapAccumL f oms oxs
     where
         f ms (Lit x) = (ms, [x])
         f (m:ms) Star = (ms, [m])
@@ -200,10 +200,10 @@ substituteWith parse oms oxs = intercalate "/" $ concat $ snd $ mapAccumL f oms 
 data Walk = Walk ([String] -> ([String],[(String,Walk)]))
           | WalkTo            ([String],[(String,Walk)])
 
-walkWith :: (FilePattern -> [Pat]) -> [FilePattern] -> (Bool, Walk)
-walkWith parse patterns = (any (\p -> isEmpty p || not (null $ match p [""])) ps2, f ps2)
+walkWith :: [[Pat]] -> (Bool, Walk)
+walkWith patterns = (any (\p -> isEmpty p || not (null $ match p [""])) ps2, f ps2)
     where
-        ps2 = map (filter (/= Lit ".") . optimise . parse) patterns
+        ps2 = map (filter (/= Lit ".") . optimise) patterns
 
         f (nubOrd -> ps)
             | all isLit fin, all (isLit . fst) nxt = WalkTo (map fromLit fin, map (fromLit *** f) nxt)

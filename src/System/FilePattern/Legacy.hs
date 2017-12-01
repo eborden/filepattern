@@ -88,7 +88,7 @@ extract = extractWith parseLegacy
 
 -- | Like 'FilePattern.substitute' but also deals with @\/\/@ patterns.
 substitute :: [String] -> FilePattern -> FilePath
-substitute = substituteWith parseLegacy
+substitute xs = substituteWith xs . parseLegacy
 
 
 ---------------------------------------------------------------------
@@ -96,4 +96,4 @@ substitute = substituteWith parseLegacy
 
 -- | Like 'FilePattern.walk' but also deals with @\/\/@ patterns.
 walk :: [FilePattern] -> (Bool, Walk)
-walk = walkWith parseLegacy
+walk = walkWith . map parseLegacy
