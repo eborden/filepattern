@@ -74,11 +74,11 @@ filePattern = filePatternWith parse
 
 -- | Is the pattern free from any * and **.
 simple :: FilePattern -> Bool
-simple = simpleWith parse
+simple = simpleWith . parse
 
 -- | Do they have the same * and ** counts in the same order
 compatible :: [FilePattern] -> Bool
-compatible = compatibleWith parse
+compatible = compatibleWith . map parse
 
 -- | Extract the items that match the wildcards. The pair must match with '?=='.
 extract :: FilePattern -> FilePath -> [String]

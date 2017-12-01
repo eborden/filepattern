@@ -147,8 +147,8 @@ filePatternWith parse p = \x -> if eq x then Just $ ex x else Nothing
 ---------------------------------------------------------------------
 -- MULTIPATTERN COMPATIBLE SUBSTITUTIONS
 
-specialsWith :: (FilePattern -> [Pat]) -> FilePattern -> [Pat]
-specialsWith parse = concatMap f . parse
+specialsWith :: [Pat] -> [Pat]
+specialsWith = concatMap f
     where
         f Lit{} = []
         f Star = [Star]
@@ -157,13 +157,13 @@ specialsWith parse = concatMap f . parse
         f (Stars _ xs _) = replicate (length xs + 1) Star
 
 -- | Is the pattern free from any * and //.
-simpleWith :: (FilePattern -> [Pat]) -> FilePattern -> Bool
-simpleWith parse = null . specialsWith parse
+simpleWith :: [Pat] -> Bool
+simpleWith = null . specialsWith
 
 -- | Do they have the same * and // counts in the same order
-compatibleWith :: (FilePattern -> [Pat]) -> [FilePattern] -> Bool
-compatibleWith _ [] = True
-compatibleWith parse (x:xs) = all ((==) (specialsWith parse x) . specialsWith parse) xs
+compatibleWith :: [[Pat]] -> Bool
+compatibleWith [] = True
+compatibleWith (x:xs) = all ((==) (specialsWith x) . specialsWith) xs
 
 -- | Extract the items that match the wildcards. The pair must match with '?=='.
 extractWith :: (FilePattern -> [Pat]) -> FilePattern -> FilePath -> [String]

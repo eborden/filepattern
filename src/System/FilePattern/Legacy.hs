@@ -76,11 +76,11 @@ filePattern = filePatternWith parseLegacy
 
 -- | Like 'FilePattern.simple' but also deals with @\/\/@ patterns.
 simple :: FilePattern -> Bool
-simple = simpleWith parseLegacy
+simple = simpleWith . parseLegacy
 
 -- | Like 'FilePattern.compatible' but also deals with @\/\/@ patterns.
 compatible :: [FilePattern] -> Bool
-compatible = compatibleWith parseLegacy
+compatible = compatibleWith . map parseLegacy
 
 -- | Like 'FilePattern.extract' but also deals with @\/\/@ patterns.
 extract :: FilePattern -> FilePath -> [String]
