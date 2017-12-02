@@ -51,3 +51,7 @@ test-suite filepattern-test
     other-modules:
         Test.FilePattern
         Test.FilePattern.Legacy
+        System.FilePattern
+        System.FilePattern.Core
+        System.FilePattern.Legacy
+        System.FilePattern.Parser
