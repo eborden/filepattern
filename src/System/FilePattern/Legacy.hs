@@ -1,4 +1,3 @@
-{-# LANGUAGE PatternGuards #-}
 
 -- | A module for pattern matching on file names.
 --
