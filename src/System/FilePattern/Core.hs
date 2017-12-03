@@ -16,17 +16,15 @@ module System.FilePattern.Core(
     -- * Accelerated searching
     Walk(..), walkWith,
     -- * Testing only
-    Pat(..), isRelativePath, isRelativePattern
+    Pat(..)
     ) where
 
 import Control.Applicative
-import Data.Char
 import Data.List.Extra
 import Data.Maybe
 import Data.Tuple.Extra
 import Prelude
 import System.FilePath (isPathSeparator)
-import System.Info.Extra
 
 
 -- | A type synonym for file patterns, containing @**@ and @*@. For the syntax
@@ -69,20 +67,6 @@ optimise (x:xs) = x : optimise xs
 optimise [] = []
 
 
--- | A 'FilePattern' that will only match 'isRelativePath' values.
-isRelativePattern :: FilePattern -> Bool
-isRelativePattern ('*':'*':xs)
-    | [] <- xs = True
-    | x:_ <- xs, isPathSeparator x = True
-isRelativePattern _ = False
-
--- | A non-absolute 'FilePath'.
-isRelativePath :: FilePath -> Bool
-isRelativePath (x:_) | isPathSeparator x = False
-isRelativePath (x:':':_) | isWindows, isAlpha x = False
-isRelativePath _ = True
-
-
 -- | Given a pattern, and a list of path components, return a list of all matches
 --   (for each wildcard in order, what the wildcard matched).
 match :: [Pat] -> [String] -> [[String]]
@@ -122,10 +106,8 @@ matchStars Skip1 _ = Nothing
 
 matchWith :: (FilePattern -> [Pat]) -> FilePattern -> FilePath -> Bool
 matchWith parser pat = case optimise $ parser pat of
-    [x] | x == Skip || x == Skip1 -> if rp then isRelativePath else const True
-    p -> let f = not . null . match p . split isPathSeparator
-         in if rp then (\x -> isRelativePath x && f x) else f
-    where rp = isRelativePattern pat
+    [x] | x == Skip || x == Skip1 -> const True
+    p -> not . null . match p . split isPathSeparator
 
 
 -- | Like '?==', but returns 'Nothing' on if there is no match, otherwise 'Just' with the list

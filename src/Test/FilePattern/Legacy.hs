@@ -104,7 +104,7 @@ main = do
     --f True (toNative "foo/bar") "foo/bar"
     --f True (toNative "foo/bar") (toNative "foo/bar")
     f True "//*" "/bar"
-    f False "**/*" "/bar"
+    f True "**/*" "/bar"
     f True "/bob//foo" "/bob/this/test/foo"
     f True "/bob/**/foo" "/bob/this/test/foo"
     f False "/bob//foo" "bob/this/test/foo"
@@ -118,7 +118,7 @@ main = do
     f True "/a//" "/a"
     f True "/a/**" "/a"
     f True "///a//" "/a"
-    f False "**/a/**" "/a"
+    f True "**/a/**" "/a"
     f False "///" ""
     f True "///" "/"
     f True "/**" "/"
@@ -163,18 +163,18 @@ main = do
     f False "*//*//*" "x/y"
     f False "*/**/*/**/*" "x/y"
     f True "//*/" "/"
-    f False "**/*/" "/"
+    f True "**/*/" "/"
     f True "*/////" "/"
     f True "*/**/**/" "/"
     f False "b*b*b*//" "bb"
     f False "b*b*b*/**" "bb"
 
-    f False "**" "/"
-    f False "**/x" "/x"
+    f True "**" "/"
+    f True "**/x" "/x"
     f True "**" "x/"
-    f (not isWindows) "**" "\\\\drive"
-    f (not isWindows) "**" "C:\\drive"
-    f (not isWindows) "**" "C:drive"
+    f True "**" "\\\\drive"
+    f True "**" "C:\\drive"
+    f True "**" "C:drive"
 
     -- We support ignoring '.' values in FilePath as they are inserted by @filepath@ a lot
     f True "./file" "file"
@@ -268,8 +268,6 @@ legacyTest = do
 
 
 walker :: ([FilePattern] -> (Bool, Walk)) -> FilePattern -> FilePath -> Bool
--- Slight difference of opinion since Walker is always relative to something
-walker walking a b | isRelativePattern a, not $ isRelativePath b = False
 walker walking a b = f (split isPathSeparator b) $ snd $ walking [a]
     where
         f (".":xs) w = f xs w
