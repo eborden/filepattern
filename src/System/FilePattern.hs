@@ -51,7 +51,7 @@ import Prelude
 --   Patterns with constructs such as @foo\/..\/bar@ will never match
 --   normalised 'FilePath' values, so are unlikely to be correct.
 (?==) :: FilePattern -> FilePath -> Bool
-(?==) = matchWith . parse
+(?==) = matchBoolWith . parse
 
 
 -- | Like '?==', but returns 'Nothing' on if there is no match, otherwise 'Just' with the list

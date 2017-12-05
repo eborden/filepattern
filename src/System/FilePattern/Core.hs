@@ -6,7 +6,7 @@
 --   To support that, we have 'with' patterns that are customized by the lexer.
 module System.FilePattern.Core(
     -- * Primitive API, as exposed
-    FilePattern, matchWith,
+    FilePattern, matchBoolWith,
     -- * General API, used by other people.
     filePatternWith,
     -- * Optimisation opportunities
@@ -75,8 +75,8 @@ matchStars Star _ = Nothing
 matchStars Skip _ = Nothing
 matchStars Skip1 _ = Nothing
 
-matchWith :: Pats -> FilePath -> Bool
-matchWith (Pats _ pat) = case optimise pat of
+matchBoolWith :: Pats -> FilePath -> Bool
+matchBoolWith (Pats _ pat) = case optimise pat of
     [x] | x == Skip || x == Skip1 -> const True
     p -> not . null . match p . split isPathSeparator
 
@@ -94,7 +94,7 @@ matchWith (Pats _ pat) = case optimise pat of
 --   @\\@ separators will be replaced by @\/@.
 filePatternWith :: Pats -> FilePath -> Maybe [String]
 filePatternWith p = \x -> if eq x then Just $ ex x else Nothing
-    where eq = matchWith p
+    where eq = matchBoolWith p
           ex = extractWith p
 
 ---------------------------------------------------------------------
@@ -122,7 +122,7 @@ compatibleWith (x:xs) = all ((==) (specialsWith x) . specialsWith) xs
 extractWith :: Pats -> FilePath -> [String]
 extractWith pats@(Pats o ps) x =
     case match ps $ split isPathSeparator x of
-        [] | matchWith pats x -> error $ "extract with " ++ show o ++ " and " ++ show x
+        [] | matchBoolWith pats x -> error $ "extract with " ++ show o ++ " and " ++ show x
            | otherwise -> error $ "Pattern " ++ show o ++ " does not match " ++ x ++ ", when trying to extract the FilePattern matches"
         ms:_ -> ms
 
