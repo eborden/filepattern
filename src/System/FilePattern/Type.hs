@@ -20,9 +20,8 @@ module System.FilePattern.Type(
 type FilePattern = String
 
 
--- | Combination of the original FilePattern (for error messages),
---   along with the parsed representation.
-data Pats = Pats FilePattern [Pat]
+-- | Parsed 'FilePattern'.
+newtype Pats = Pats {fromPats :: [Pat]}
     deriving (Eq,Show)
 
 data Pat = Lit String -- ^ foo

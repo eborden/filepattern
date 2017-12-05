@@ -74,7 +74,7 @@ matchStars Skip _ = Nothing
 matchStars Skip1 _ = Nothing
 
 matchBoolWith :: Pats -> FilePath -> Bool
-matchBoolWith (Pats _ pat) = case optimise pat of
+matchBoolWith (Pats pat) = case optimise pat of
     [x] | x == Skip || x == Skip1 -> const True
     p -> not . null . match p . split isPathSeparator
 
@@ -91,14 +91,14 @@ matchBoolWith (Pats _ pat) = case optimise pat of
 --   Note that the @**@ will often contain a trailing @\/@, and even on Windows any
 --   @\\@ separators will be replaced by @\/@.
 matchWith :: Pats -> FilePath -> Maybe [String]
-matchWith pats@(Pats o ps) = listToMaybe . match ps . split isPathSeparator
+matchWith (Pats ps) = listToMaybe . match ps . split isPathSeparator
 
 
 ---------------------------------------------------------------------
 -- MULTIPATTERN COMPATIBLE SUBSTITUTIONS
 
 specialsWith :: Pats -> [Pat]
-specialsWith (Pats _ ps) = concatMap f ps
+specialsWith = concatMap f . fromPats
     where
         f Lit{} = []
         f Star = [Star]
@@ -119,7 +119,7 @@ compatibleWith (x:xs) = all ((==) (specialsWith x) . specialsWith) xs
 --
 -- > p '?==' x ==> substitute (extract p x) p == x
 substituteWith :: [String] -> Pats -> FilePath
-substituteWith oms (Pats _ oxs) = intercalate "/" $ concat $ snd $ mapAccumL f oms oxs
+substituteWith oms (Pats oxs) = intercalate "/" $ concat $ snd $ mapAccumL f oms oxs
     where
         f ms (Lit x) = (ms, [x])
         f (m:ms) Star = (ms, [m])
@@ -144,7 +144,7 @@ data Walk = Walk ([String] -> ([String],[(String,Walk)]))
 walkWith :: [Pats] -> (Bool, Walk)
 walkWith patterns = (any (\p -> isEmpty p || not (null $ match p [""])) ps2, f ps2)
     where
-        ps2 = map (filter (/= Lit ".") . optimise) [ps | Pats _ ps <- patterns]
+        ps2 = map (filter (/= Lit ".") . optimise . fromPats) patterns
 
         f (nubOrd -> ps)
             | all isLit fin, all (isLit . fst) nxt = WalkTo (map fromLit fin, map (fromLit *** f) nxt)
