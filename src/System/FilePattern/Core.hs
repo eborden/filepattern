@@ -29,9 +29,9 @@ import System.FilePath (isPathSeparator)
 
 -- | Optimisations that may change the matched expressions
 optimise :: [Pat] -> [Pat]
+optimise (Skip1:xs) = optimise $ Star:Skip:xs
 optimise (Skip:Skip:xs) = optimise $ Skip:xs
-optimise (Skip:Star:xs) = optimise $ Skip1:xs
-optimise (Star:Skip:xs) = optimise $ Skip1:xs
+optimise (Star:Skip:xs) = optimise $ Skip:Star:xs
 optimise (x:xs) = x : optimise xs
 optimise [] = []
 
