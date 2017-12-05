@@ -12,8 +12,8 @@ import Data.List.Extra
 import Data.Maybe
 import Data.IORef
 import System.IO.Unsafe
-import System.FilePattern.Core
 import Prelude
+import System.FilePattern.Type
 import System.FilePath (isPathSeparator)
 
 
@@ -87,4 +87,3 @@ parse = parseLexeme . f
         f (x1:xs) | isPathSeparator x1 = Slash : f xs
         f xs = Str a : f b
             where (a,b) = break isPathSeparator xs
-

@@ -6,7 +6,7 @@ import Control.Exception
 import Control.Monad
 import Data.List.Extra
 import System.FilePattern.Legacy
-import System.FilePattern.Core
+import System.FilePattern.Type
 import System.FilePattern.Parser(parseLegacy)
 import System.FilePath(isPathSeparator)
 import System.Info.Extra

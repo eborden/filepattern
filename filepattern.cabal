@@ -35,6 +35,7 @@ library
     other-modules:
         System.FilePattern.Core
         System.FilePattern.Parser
+        System.FilePattern.Type
 
 
 test-suite filepattern-test
@@ -55,3 +56,4 @@ test-suite filepattern-test
         System.FilePattern.Core
         System.FilePattern.Legacy
         System.FilePattern.Parser
+        System.FilePattern.Type
