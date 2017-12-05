@@ -15,7 +15,6 @@ module System.FilePattern.Core(
     Walk(..), walkWith
     ) where
 
-import Control.Applicative
 import Data.List.Extra
 import Data.Maybe
 import Data.Tuple.Extra
@@ -55,19 +54,6 @@ matchOne (Stars x) y = isJust $ wildcard x y
 matchOne Star _ = True
 matchOne Skip _ = False
 matchOne Skip1 _ = False
-
-
--- Only return the first (all patterns left-most) valid star matching
-wildcard :: Eq a => Wildcard [a] -> [a] -> Maybe [[a]]
-wildcard (Wildcard pre mid post) x = do
-    y <- stripPrefix pre x
-    z <- if null post then Just y else stripSuffix post y
-    stripInfixes mid z
-    where
-        stripInfixes [] y = Just [y]
-        stripInfixes (m:ms) y = do
-            (a,z) <- stripInfix m y
-            (a:) <$> stripInfixes ms z
 
 
 matchBoolWith :: Pats -> FilePath -> Bool

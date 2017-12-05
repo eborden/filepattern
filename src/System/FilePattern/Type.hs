@@ -6,9 +6,11 @@ module System.FilePattern.Type(
     Pats(..),
     Pat(..),
     Wildcard(..),
+    wildcard,
     isLit, fromLit
     ) where
 
+import Data.List.Extra
 
 -- | A type synonym for file patterns, containing @**@ and @*@. For the syntax
 --   and semantics of 'FilePattern' see '?=='.
@@ -27,6 +29,19 @@ newtype Pats = Pats {fromPats :: [Pat]}
 
 data Wildcard a = Wildcard a [a] a
     deriving (Show,Eq,Ord)
+
+-- Only return the first (all patterns left-most) valid star matching
+wildcard :: Eq a => Wildcard [a] -> [a] -> Maybe [[a]]
+wildcard (Wildcard pre mid post) x = do
+    y <- stripPrefix pre x
+    z <- if null post then Just y else stripSuffix post y
+    stripInfixes mid z
+    where
+        stripInfixes [] y = Just [y]
+        stripInfixes (m:ms) y = do
+            (a,z) <- stripInfix m y
+            (a:) <$> stripInfixes ms z
+
 
 data Pat = Lit String -- ^ foo
          | Star   -- ^ /*/
