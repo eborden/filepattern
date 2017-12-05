@@ -56,9 +56,10 @@ import Prelude
 --   of fragments matching each wildcard. For example:
 --
 -- @
--- 'filePattern' \"**\/*.c\" \"test.txt\" == Nothing
--- 'filePattern' \"**\/*.c\" \"foo.c\" == Just [\"",\"foo\"]
--- 'filePattern' \"**\/*.c\" \"bar\/baz\/foo.c\" == Just [\"bar\/baz/\",\"foo\"]
+-- isJust ('match' p x) == (p '?==' x)
+-- 'match' \"**\/*.c\" \"test.txt\" == Nothing
+-- 'match' \"**\/*.c\" \"foo.c\" == Just [\"",\"foo\"]
+-- 'match' \"**\/*.c\" \"bar\/baz\/foo.c\" == Just [\"bar\/baz/\",\"foo\"]
 -- @
 --
 --   Note that the @**@ will often contain a trailing @\/@, and even on Windows any
@@ -69,17 +70,19 @@ match = matchWith . parse
 ---------------------------------------------------------------------
 -- MULTIPATTERN COMPATIBLE SUBSTITUTIONS
 
--- | Is the pattern free from any * and **.
+-- | Is the pattern free from any @*@ and @**@.
 simple :: FilePattern -> Bool
 simple = simpleWith . parse
 
--- | Do they have the same * and ** counts in the same order
+-- | Do they have the same @*@ and @**@ counts in the same order
 compatible :: [FilePattern] -> Bool
 compatible = compatibleWith . map parse
 
 -- | Given a successful 'match', substitute it back in to a 'compatible' pattern.
 --
--- > p '?==' x ==> substitute (fromJust $ match p x) p == x
+-- @
+-- p '?==' x ==> 'substitute' (fromJust $ 'match' p x) p == x
+-- @
 substitute :: [String] -> FilePattern -> FilePath
 substitute xs = substituteWith xs . parse
 
