@@ -76,6 +76,7 @@ matchStars Skip1 _ = Nothing
 matchBoolWith :: Pats -> FilePath -> Bool
 matchBoolWith (Pats pat) = case optimise pat of
     [x] | x == Skip || x == Skip1 -> const True
+        -- Skip1 is safe because split NEVER returns null
     p -> not . null . match p . split isPathSeparator
 
 
