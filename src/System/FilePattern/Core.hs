@@ -75,8 +75,8 @@ matchStars Star _ = Nothing
 matchStars Skip _ = Nothing
 matchStars Skip1 _ = Nothing
 
-matchWith :: [Pat] -> FilePath -> Bool
-matchWith pat = case optimise pat of
+matchWith :: Pats -> FilePath -> Bool
+matchWith (Pats _ pat) = case optimise pat of
     [x] | x == Skip || x == Skip1 -> const True
     p -> not . null . match p . split isPathSeparator
 
@@ -92,16 +92,16 @@ matchWith pat = case optimise pat of
 --
 --   Note that the @**@ will often contain a trailing @\/@, and even on Windows any
 --   @\\@ separators will be replaced by @\/@.
-filePatternWith :: FilePattern -> [Pat] -> FilePath -> Maybe [String]
-filePatternWith fp p = \x -> if eq x then Just $ ex x else Nothing
+filePatternWith :: Pats -> FilePath -> Maybe [String]
+filePatternWith p = \x -> if eq x then Just $ ex x else Nothing
     where eq = matchWith p
-          ex = extractWith fp p
+          ex = extractWith p
 
 ---------------------------------------------------------------------
 -- MULTIPATTERN COMPATIBLE SUBSTITUTIONS
 
-specialsWith :: [Pat] -> [Pat]
-specialsWith = concatMap f
+specialsWith :: Pats -> [Pat]
+specialsWith (Pats _ ps) = concatMap f ps
     where
         f Lit{} = []
         f Star = [Star]
@@ -110,28 +110,28 @@ specialsWith = concatMap f
         f (Stars _ xs _) = replicate (length xs + 1) Star
 
 -- | Is the pattern free from any * and //.
-simpleWith :: [Pat] -> Bool
+simpleWith :: Pats -> Bool
 simpleWith = null . specialsWith
 
 -- | Do they have the same * and // counts in the same order
-compatibleWith :: [[Pat]] -> Bool
+compatibleWith :: [Pats] -> Bool
 compatibleWith [] = True
 compatibleWith (x:xs) = all ((==) (specialsWith x) . specialsWith) xs
 
 -- | Extract the items that match the wildcards. The pair must match with '?=='.
-extractWith :: FilePattern -> [Pat] -> FilePath -> [String]
-extractWith info pat x =
-    case match pat (split isPathSeparator x) of
-        [] | matchWith pat x -> error $ "extract with " ++ show info ++ " and " ++ show x
-           | otherwise -> error $ "Pattern " ++ show info ++ " does not match " ++ x ++ ", when trying to extract the FilePattern matches"
+extractWith :: Pats -> FilePath -> [String]
+extractWith pats@(Pats o ps) x =
+    case match ps $ split isPathSeparator x of
+        [] | matchWith pats x -> error $ "extract with " ++ show o ++ " and " ++ show x
+           | otherwise -> error $ "Pattern " ++ show o ++ " does not match " ++ x ++ ", when trying to extract the FilePattern matches"
         ms:_ -> ms
 
 
 -- | Given the result of 'extract', substitute it back in to a 'compatible' pattern.
 --
 -- > p '?==' x ==> substitute (extract p x) p == x
-substituteWith :: [String] -> [Pat] -> FilePath
-substituteWith oms oxs = intercalate "/" $ concat $ snd $ mapAccumL f oms oxs
+substituteWith :: [String] -> Pats -> FilePath
+substituteWith oms (Pats _ oxs) = intercalate "/" $ concat $ snd $ mapAccumL f oms oxs
     where
         f ms (Lit x) = (ms, [x])
         f (m:ms) Star = (ms, [m])
@@ -153,10 +153,10 @@ substituteWith oms oxs = intercalate "/" $ concat $ snd $ mapAccumL f oms oxs
 data Walk = Walk ([String] -> ([String],[(String,Walk)]))
           | WalkTo            ([String],[(String,Walk)])
 
-walkWith :: [[Pat]] -> (Bool, Walk)
+walkWith :: [Pats] -> (Bool, Walk)
 walkWith patterns = (any (\p -> isEmpty p || not (null $ match p [""])) ps2, f ps2)
     where
-        ps2 = map (filter (/= Lit ".") . optimise) patterns
+        ps2 = map (filter (/= Lit ".") . optimise) [ps | Pats _ ps <- patterns]
 
         f (nubOrd -> ps)
             | all isLit fin, all (isLit . fst) nxt = WalkTo (map fromLit fin, map (fromLit *** f) nxt)

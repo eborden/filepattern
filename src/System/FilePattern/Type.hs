@@ -3,6 +3,7 @@
 -- | The types involved
 module System.FilePattern.Type(
     FilePattern,
+    Pats(..),
     Pat(..),
     isLit, fromLit
     ) where
@@ -12,12 +13,17 @@ module System.FilePattern.Type(
 --   and semantics of 'FilePattern' see '?=='.
 --
 --   Most 'FilePath' values lacking @.@ and @..@ are suitable as 'FilePattern' values which match
---   only that specific file. On Windows @\\@ is treated as equivalent to @\/@.
+--   only that specific file. On (Windows @\\@ is treated as equivalent to @\/@.
 --
 --   You can write 'FilePattern' values as a literal string, or build them
 --   up using the operators '<.>' and '</>'.
 type FilePattern = String
 
+
+-- | Combination of the original FilePattern (for error messages),
+--   along with the parsed representation.
+data Pats = Pats FilePattern [Pat]
+    deriving (Eq,Show)
 
 data Pat = Lit String -- ^ foo
          | Star   -- ^ /*/

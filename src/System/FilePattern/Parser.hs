@@ -67,8 +67,8 @@ parseLit x = case split (== '*') x of
         Just (mid,post) -> Stars pre mid post
 
 
-parseLegacy :: FilePattern -> [Pat]
-parseLegacy x = parseLexeme $ f x x
+parseLegacy :: FilePattern -> Pats
+parseLegacy x = Pats x $ parseLexeme $ f x x
     where
         -- first argument is the original full pattern, or "" if we've already warned
         f o "" = []
@@ -79,8 +79,8 @@ parseLegacy x = parseLexeme $ f x x
             where (a,b) = break isPathSeparator xs
 
 
-parse :: FilePattern -> [Pat]
-parse = parseLexeme . f
+parse :: FilePattern -> Pats
+parse x = Pats x $ parseLexeme $ f x
     where
         f "" = []
         f (x1:x2:xs) | isPathSeparator x1, isPathSeparator x2 = f (x2:xs)

@@ -38,7 +38,7 @@ instance Arbitrary Path where
 -- | Used for internal testing
 internalTest :: IO ()
 internalTest = do
-    let x # y = when (parseLegacy x /= y) $ fail $ show ("FilePattern.internalTest",x,parseLegacy x,y)
+    let x # y = when (parseLegacy x /= Pats x y) $ fail $ show ("FilePattern.internalTest",x,parseLegacy x,y)
     "" # [Lit ""]
     "x" # [Lit "x"]
     "/" # [Lit "",Lit ""]
