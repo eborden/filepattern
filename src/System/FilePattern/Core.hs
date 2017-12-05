@@ -121,10 +121,10 @@ matchWith pat = case optimise pat of
 --
 --   Note that the @**@ will often contain a trailing @\/@, and even on Windows any
 --   @\\@ separators will be replaced by @\/@.
-filePatternWith :: (FilePattern -> [Pat]) -> FilePattern -> FilePath -> Maybe [String]
-filePatternWith parse p = \x -> if eq x then Just $ ex x else Nothing
-    where eq = matchWith $ parse p
-          ex = extractWith parse p
+filePatternWith :: FilePattern -> [Pat] -> FilePath -> Maybe [String]
+filePatternWith fp p = \x -> if eq x then Just $ ex x else Nothing
+    where eq = matchWith p
+          ex = extractWith fp p
 
 ---------------------------------------------------------------------
 -- MULTIPATTERN COMPATIBLE SUBSTITUTIONS
@@ -148,11 +148,11 @@ compatibleWith [] = True
 compatibleWith (x:xs) = all ((==) (specialsWith x) . specialsWith) xs
 
 -- | Extract the items that match the wildcards. The pair must match with '?=='.
-extractWith :: (FilePattern -> [Pat]) -> FilePattern -> FilePath -> [String]
-extractWith parse p = let pat = parse p in \x ->
+extractWith :: FilePattern -> [Pat] -> FilePath -> [String]
+extractWith info pat x =
     case match pat (split isPathSeparator x) of
-        [] | matchWith (parse p) x -> error $ "extract with " ++ show p ++ " and " ++ show x
-           | otherwise -> error $ "Pattern " ++ show p ++ " does not match " ++ x ++ ", when trying to extract the FilePattern matches"
+        [] | matchWith pat x -> error $ "extract with " ++ show info ++ " and " ++ show x
+           | otherwise -> error $ "Pattern " ++ show info ++ " does not match " ++ x ++ ", when trying to extract the FilePattern matches"
         ms:_ -> ms
 
 

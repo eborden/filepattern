@@ -66,7 +66,7 @@ import Prelude
 --   Note that the @**@ will often contain a trailing @\/@, and even on Windows any
 --   @\\@ separators will be replaced by @\/@.
 filePattern :: FilePattern -> FilePath -> Maybe [String]
-filePattern = filePatternWith parse
+filePattern x = filePatternWith x (parse x)
 
 ---------------------------------------------------------------------
 -- MULTIPATTERN COMPATIBLE SUBSTITUTIONS
@@ -81,7 +81,7 @@ compatible = compatibleWith . map parse
 
 -- | Extract the items that match the wildcards. The pair must match with '?=='.
 extract :: FilePattern -> FilePath -> [String]
-extract = extractWith parse
+extract x = extractWith x (parse x)
 
 -- | Given the result of 'extract', substitute it back in to a 'compatible' pattern.
 --

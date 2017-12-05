@@ -68,7 +68,7 @@ import Prelude
 
 -- | Like 'FilePattern.filePattern' but also deals with @\/\/@ patterns.
 filePattern :: FilePattern -> FilePath -> Maybe [String]
-filePattern = filePatternWith parseLegacy
+filePattern x = filePatternWith x (parseLegacy x)
 
 ---------------------------------------------------------------------
 -- MULTIPATTERN COMPATIBLE SUBSTITUTIONS
@@ -83,7 +83,7 @@ compatible = compatibleWith . map parseLegacy
 
 -- | Like 'FilePattern.extract' but also deals with @\/\/@ patterns.
 extract :: FilePattern -> FilePath -> [String]
-extract = extractWith parseLegacy
+extract x = extractWith x (parseLegacy x)
 
 -- | Like 'FilePattern.substitute' but also deals with @\/\/@ patterns.
 substitute :: [String] -> FilePattern -> FilePath
