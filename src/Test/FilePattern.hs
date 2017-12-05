@@ -4,7 +4,7 @@ import Control.Monad
 import Data.List.Extra
 import System.FilePattern
 import System.FilePattern.Core
-import System.FilePattern.Parser
+import System.FilePattern.Parser(parse)
 import System.FilePath(isPathSeparator)
 import System.Info.Extra
 import System.IO.Unsafe
