@@ -44,22 +44,22 @@ match (Skip1:xs) (y:ys) = [(y++"/"++r):rs | r:rs <- match (Skip:xs) ys]
 match (Skip:xs) [] = map ("":) $ match xs []
 match (Star:xs) (y:ys) = map (y:) $ match xs ys
 match (Lit x:xs) (y:ys) = concat $ [match xs ys | x == y] ++ [match xs (y:ys) | x == "."]
-match (Stars x:xs) (y:ys) | Just rs <- matchStars x y = map (rs ++) $ match xs ys
+match (Stars x:xs) (y:ys) | Just rs <- wildcard x y = map (rs ++) $ match xs ys
 match [] [] = [[]]
 match _ _ = []
 
 
 matchOne :: Pat -> String -> Bool
 matchOne (Lit x) y = x == y
-matchOne (Stars x) y = isJust $ matchStars x y
+matchOne (Stars x) y = isJust $ wildcard x y
 matchOne Star _ = True
 matchOne Skip _ = False
 matchOne Skip1 _ = False
 
 
 -- Only return the first (all patterns left-most) valid star matching
-matchStars :: Wildcard String -> String -> Maybe [String]
-matchStars (Wildcard pre mid post) x = do
+wildcard :: Eq a => Wildcard [a] -> [a] -> Maybe [[a]]
+wildcard (Wildcard pre mid post) x = do
     y <- stripPrefix pre x
     z <- if null post then Just y else stripSuffix post y
     stripInfixes mid z
