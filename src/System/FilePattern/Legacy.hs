@@ -64,22 +64,22 @@ import Prelude
 (?==) = matchBoolWith . parseLegacy
 
 
--- | Like 'FilePattern.match' but also deals with @\/\/@ patterns.
+-- | Like 'System.FilePattern.match' but also deals with @\/\/@ patterns.
 match :: FilePattern -> FilePath -> Maybe [String]
 match = matchWith . parseLegacy
 
 ---------------------------------------------------------------------
 -- MULTIPATTERN COMPATIBLE SUBSTITUTIONS
 
--- | Like 'FilePattern.simple' but also deals with @\/\/@ patterns.
+-- | Like 'System.FilePattern.simple' but also deals with @\/\/@ patterns.
 simple :: FilePattern -> Bool
 simple = simpleWith . parseLegacy
 
--- | Like 'FilePattern.compatible' but also deals with @\/\/@ patterns.
+-- | Like 'System.FilePattern.compatible' but also deals with @\/\/@ patterns.
 compatible :: [FilePattern] -> Bool
 compatible = compatibleWith . map parseLegacy
 
--- | Like 'FilePattern.substitute' but also deals with @\/\/@ patterns.
+-- | Like 'System.FilePattern.substitute' but also deals with @\/\/@ patterns.
 substitute :: [String] -> FilePattern -> FilePath
 substitute xs = substituteWith xs . parseLegacy
 
@@ -87,6 +87,6 @@ substitute xs = substituteWith xs . parseLegacy
 ---------------------------------------------------------------------
 -- EFFICIENT PATH WALKING
 
--- | Like 'FilePattern.walk' but also deals with @\/\/@ patterns.
+-- | Like 'System.FilePattern.walk' but also deals with @\/\/@ patterns.
 walk :: [FilePattern] -> (Bool, Walk)
 walk = walkWith . map parseLegacy
