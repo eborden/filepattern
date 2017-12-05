@@ -58,7 +58,7 @@ matchOne Skip1 _ = False
 
 
 -- Only return the first (all patterns left-most) valid star matching
-matchStars :: Wildcard -> String -> Maybe [String]
+matchStars :: Wildcard String -> String -> Maybe [String]
 matchStars (Wildcard pre mid post) x = do
     y <- stripPrefix pre x
     z <- if null post then Just y else stripSuffix post y
