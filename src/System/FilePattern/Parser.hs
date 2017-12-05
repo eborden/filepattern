@@ -64,7 +64,7 @@ parseLit x = case split (== '*') x of
     [y] -> Lit y
     pre:xs -> case unsnoc xs of
         Nothing -> error "parseLit: Stars check failed"
-        Just (mid,post) -> Stars pre mid post
+        Just (mid,post) -> Stars $ Wildcard pre mid post
 
 
 parseLegacy :: FilePattern -> Pats

@@ -44,22 +44,22 @@ match (Skip1:xs) (y:ys) = [(y++"/"++r):rs | r:rs <- match (Skip:xs) ys]
 match (Skip:xs) [] = map ("":) $ match xs []
 match (Star:xs) (y:ys) = map (y:) $ match xs ys
 match (Lit x:xs) (y:ys) = concat $ [match xs ys | x == y] ++ [match xs (y:ys) | x == "."]
-match (x@Stars{}:xs) (y:ys) | Just rs <- matchStars x y = map (rs ++) $ match xs ys
+match (Stars x:xs) (y:ys) | Just rs <- matchStars x y = map (rs ++) $ match xs ys
 match [] [] = [[]]
 match _ _ = []
 
 
 matchOne :: Pat -> String -> Bool
 matchOne (Lit x) y = x == y
-matchOne x@Stars{} y = isJust $ matchStars x y
+matchOne (Stars x) y = isJust $ matchStars x y
 matchOne Star _ = True
 matchOne Skip _ = False
 matchOne Skip1 _ = False
 
 
 -- Only return the first (all patterns left-most) valid star matching
-matchStars :: Pat -> String -> Maybe [String]
-matchStars (Stars pre mid post) x = do
+matchStars :: Wildcard -> String -> Maybe [String]
+matchStars (Wildcard pre mid post) x = do
     y <- stripPrefix pre x
     z <- if null post then Just y else stripSuffix post y
     stripInfixes mid z
@@ -102,7 +102,7 @@ specialsWith = concatMap f . fromPats
         f Star = [Star]
         f Skip = [Skip]
         f Skip1 = [Skip]
-        f (Stars _ xs _) = replicate (length xs + 1) Star
+        f (Stars (Wildcard _ xs _)) = replicate (length xs + 1) Star
 
 -- | Is the pattern free from any * and //.
 simpleWith :: Pats -> Bool
@@ -123,7 +123,7 @@ substituteWith oms (Pats oxs) = intercalate "/" $ concat $ snd $ mapAccumL f oms
         f (m:ms) Star = (ms, [m])
         f (m:ms) Skip = (ms, splitSep m)
         f (m:ms) Skip1 = (ms, splitSep m)
-        f ms (Stars pre mid post) = (ms2, [concat $ pre : zipWith (++) ms1 (mid++[post])])
+        f ms (Stars (Wildcard pre mid post)) = (ms2, [concat $ pre : zipWith (++) ms1 (mid++[post])])
             where (ms1,ms2) = splitAt (length mid + 1) ms
         f _ _ = error $ "Substitution failed into pattern " ++ show oxs ++ " with " ++ show (length oms) ++ " matches, namely " ++ show oms
 

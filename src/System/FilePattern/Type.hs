@@ -5,6 +5,7 @@ module System.FilePattern.Type(
     FilePattern,
     Pats(..),
     Pat(..),
+    Wildcard(..),
     isLit, fromLit
     ) where
 
@@ -24,12 +25,15 @@ type FilePattern = String
 newtype Pats = Pats {fromPats :: [Pat]}
     deriving (Eq,Show)
 
+data Wildcard = Wildcard String [String] String
+    deriving (Show,Eq,Ord)
+
 data Pat = Lit String -- ^ foo
          | Star   -- ^ /*/
          | Skip -- ^ //
          | Skip1 -- ^ //, but must be at least 1 element
-         | Stars String [String] String -- ^ *foo*, prefix (fixed), infix floaters, suffix
-                                        -- e.g. *foo*bar = Stars "" ["foo"] "bar"
+         | Stars Wildcard -- ^ *foo*, prefix (fixed), infix floaters, suffix
+                          -- e.g. *foo*bar = Stars "" ["foo"] "bar"
             deriving (Show,Eq,Ord)
 
 
