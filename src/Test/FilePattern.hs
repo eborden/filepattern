@@ -77,9 +77,9 @@ main = do
             assertBool (b == (pat ?== file)) $ show pat ++ " ?== " ++ show file ++ "\nEXPECTED: " ++ show b
             assertBool (b == isJust (match pat file)) $ "match " ++ show pat ++ " " ++ show file ++ "\nEXPECTED: isJust _ == " ++ show b
             assertBool (b == walker walk pat file) $ show pat ++ " `walker` " ++ show file ++ "\nEXPECTED: " ++ show b
-            when b $ assertBool (norm (substitute (extract pat file) pat) == norm file) $
-                "FAILED substitute/extract property\nPattern: " ++ show pat ++ "\nFile: " ++ show file ++ "\n" ++
-                "Extracted: " ++ show (extract pat file) ++ "\nSubstitute: " ++ show (substitute (extract pat file) pat)
+            when b $ assertBool (norm (substitute (fromJust $ match pat file) pat) == norm file) $
+                "FAILED substitute/match property\nPattern: " ++ show pat ++ "\nFile: " ++ show file ++ "\n" ++
+                "Extracted: " ++ show (match pat file) ++ "\nSubstitute: " ++ show (substitute (fromJust $ match pat file) pat)
 
     f True "//*.c" "/baz.c"
     f True "**/*.c" "foo/bar/baz.c"
@@ -196,14 +196,14 @@ main = do
     assertBool (not $ compatible ["//*a.txt","foo/**/a*.txt"]) "compatible"
     assertBool (not $ compatible ["//*a.txt","foo//a*.*txt"]) "compatible"
     assertBool (not $ compatible ["**/*a.txt","foo/**/a*.*txt"]) "compatible"
-    extract "**/*a.txt" "foo/bar/testa.txt" === ["foo/bar/","test"]
-    extract "**/*a.txt" "testa.txt" === ["","test"]
-    extract "**/a.txt" "a.txt" === [""]
-    extract "a/**/b" "a/b" === [""]
-    extract "a/**/b" "a/x/b" === ["x/"]
-    extract "a/**/b" "a/x/y/b" === ["x/y/"]
-    extract "a/**/**/b" "a/x/y/b" === ["","x/y/"]
-    extract "**/*a*.txt" "testada.txt" === ["","test","da"]
+    match "**/*a.txt" "foo/bar/testa.txt" === Just ["foo/bar/","test"]
+    match "**/*a.txt" "testa.txt" === Just ["","test"]
+    match "**/a.txt" "a.txt" === Just [""]
+    match "a/**/b" "a/b" === Just [""]
+    match "a/**/b" "a/x/b" === Just ["x/"]
+    match "a/**/b" "a/x/y/b" === Just ["x/y/"]
+    match "a/**/**/b" "a/x/y/b" === Just ["","x/y/"]
+    match "**/*a*.txt" "testada.txt" === Just ["","test","da"]
     --extract (toNative "//*a*.txt") "testada.txt" === ["","test","da"]
     --extract (toNative "**/*a*.txt") "testada.txt" === ["","test","da"]
     substitute ["","test","da"] "//*a*.txt" === "/atest.txt"
