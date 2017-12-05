@@ -6,9 +6,7 @@
 
 module System.FilePattern(
     -- * Primitive API
-    FilePattern, (?==),
-    -- * General API
-    filePattern,
+    FilePattern, (?==), match,
     -- * Optimisation opportunities
     simple,
     -- * Multipattern file rules
@@ -65,8 +63,8 @@ import Prelude
 --
 --   Note that the @**@ will often contain a trailing @\/@, and even on Windows any
 --   @\\@ separators will be replaced by @\/@.
-filePattern :: FilePattern -> FilePath -> Maybe [String]
-filePattern = filePatternWith . parse
+match :: FilePattern -> FilePath -> Maybe [String]
+match = matchWith . parse
 
 ---------------------------------------------------------------------
 -- MULTIPATTERN COMPATIBLE SUBSTITUTIONS

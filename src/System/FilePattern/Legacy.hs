@@ -12,9 +12,7 @@ module System.FilePattern.Legacy
     {-# DEPRECATED "Use module FilePattern and avoid // in the patterns" #-}
     (
     -- * Primitive API
-    FilePattern, (?==),
-    -- * General API
-    filePattern,
+    FilePattern, (?==), match,
     -- * Optimisation opportunities
     simple,
     -- * Multipattern file rules
@@ -66,9 +64,9 @@ import Prelude
 (?==) = matchBoolWith . parseLegacy
 
 
--- | Like 'FilePattern.filePattern' but also deals with @\/\/@ patterns.
-filePattern :: FilePattern -> FilePath -> Maybe [String]
-filePattern = filePatternWith . parseLegacy
+-- | Like 'FilePattern.match' but also deals with @\/\/@ patterns.
+match :: FilePattern -> FilePath -> Maybe [String]
+match = matchWith . parseLegacy
 
 ---------------------------------------------------------------------
 -- MULTIPATTERN COMPATIBLE SUBSTITUTIONS

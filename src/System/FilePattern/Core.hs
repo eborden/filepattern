@@ -6,9 +6,7 @@
 --   To support that, we have 'with' patterns that are customized by the lexer.
 module System.FilePattern.Core(
     -- * Primitive API, as exposed
-    FilePattern, matchBoolWith,
-    -- * General API, used by other people.
-    filePatternWith,
+    FilePattern, matchBoolWith, matchWith,
     -- * Optimisation opportunities
     simpleWith,
     -- * Multipattern file rules
@@ -92,8 +90,8 @@ matchBoolWith (Pats _ pat) = case optimise pat of
 --
 --   Note that the @**@ will often contain a trailing @\/@, and even on Windows any
 --   @\\@ separators will be replaced by @\/@.
-filePatternWith :: Pats -> FilePath -> Maybe [String]
-filePatternWith pats@(Pats o ps) = listToMaybe . match ps . split isPathSeparator
+matchWith :: Pats -> FilePath -> Maybe [String]
+matchWith pats@(Pats o ps) = listToMaybe . match ps . split isPathSeparator
 
 
 ---------------------------------------------------------------------

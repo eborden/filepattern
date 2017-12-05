@@ -78,7 +78,7 @@ main = do
 
     let f b pat file = do
             assertBool (b == (pat ?== file)) $ show pat ++ " ?== " ++ show file ++ "\nEXPECTED: " ++ show b
-            assertBool (b == isJust (filePattern pat file)) $ "match " ++ show pat ++ " " ++ show file ++ "\nEXPECTED: isJust _ == " ++ show b
+            assertBool (b == isJust (match pat file)) $ "match " ++ show pat ++ " " ++ show file ++ "\nEXPECTED: isJust _ == " ++ show b
             assertBool (b == walker walk pat file) $ show pat ++ " `walker` " ++ show file ++ "\nEXPECTED: " ++ show b
             when b $ assertBool (norm (substitute (extract pat file) pat) == norm file) $
                 "FAILED substitute/extract property\nPattern: " ++ show pat ++ "\nFile: " ++ show file ++ "\n" ++
@@ -185,10 +185,10 @@ main = do
     f True "foo/./bar" "foo/./bar"
     f False "foo/./bar" "foo/bob"
 
-    filePattern "**/*.c" "test.txt" === Nothing
-    filePattern "**/*.c" "foo.c" === Just ["","foo"]
-    filePattern "**/*.c" "bar/baz/foo.c" === Just ["bar/baz/","foo"]
-    filePattern "**/*.c" "bar\\baz\\foo.c" === Just
+    match "**/*.c" "test.txt" === Nothing
+    match "**/*.c" "foo.c" === Just ["","foo"]
+    match "**/*.c" "bar/baz/foo.c" === Just ["bar/baz/","foo"]
+    match "**/*.c" "bar\\baz\\foo.c" === Just
         (if isWindows then ["bar/baz/","foo"] else ["","bar\\baz\\foo"])
 
     simple "a*b" === False
