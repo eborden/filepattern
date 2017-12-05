@@ -63,7 +63,7 @@ import Prelude
 --   Patterns with constructs such as @foo\/..\/bar@ will never match
 --   normalised 'FilePath' values, so are unlikely to be correct.
 (?==) :: FilePattern -> FilePath -> Bool
-(?==) = matchWith parseLegacy
+(?==) = matchWith . parseLegacy
 
 
 -- | Like 'FilePattern.filePattern' but also deals with @\/\/@ patterns.

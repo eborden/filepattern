@@ -104,8 +104,8 @@ matchStars Star _ = Nothing
 matchStars Skip _ = Nothing
 matchStars Skip1 _ = Nothing
 
-matchWith :: (FilePattern -> [Pat]) -> FilePattern -> FilePath -> Bool
-matchWith parser pat = case optimise $ parser pat of
+matchWith :: [Pat] -> FilePath -> Bool
+matchWith pat = case optimise pat of
     [x] | x == Skip || x == Skip1 -> const True
     p -> not . null . match p . split isPathSeparator
 
@@ -123,7 +123,7 @@ matchWith parser pat = case optimise $ parser pat of
 --   @\\@ separators will be replaced by @\/@.
 filePatternWith :: (FilePattern -> [Pat]) -> FilePattern -> FilePath -> Maybe [String]
 filePatternWith parse p = \x -> if eq x then Just $ ex x else Nothing
-    where eq = matchWith parse p
+    where eq = matchWith $ parse p
           ex = extractWith parse p
 
 ---------------------------------------------------------------------
@@ -151,7 +151,7 @@ compatibleWith (x:xs) = all ((==) (specialsWith x) . specialsWith) xs
 extractWith :: (FilePattern -> [Pat]) -> FilePattern -> FilePath -> [String]
 extractWith parse p = let pat = parse p in \x ->
     case match pat (split isPathSeparator x) of
-        [] | matchWith parse p x -> error $ "extract with " ++ show p ++ " and " ++ show x
+        [] | matchWith (parse p) x -> error $ "extract with " ++ show p ++ " and " ++ show x
            | otherwise -> error $ "Pattern " ++ show p ++ " does not match " ++ x ++ ", when trying to extract the FilePattern matches"
         ms:_ -> ms
 
