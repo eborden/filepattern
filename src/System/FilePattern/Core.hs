@@ -93,9 +93,8 @@ matchBoolWith (Pats _ pat) = case optimise pat of
 --   Note that the @**@ will often contain a trailing @\/@, and even on Windows any
 --   @\\@ separators will be replaced by @\/@.
 filePatternWith :: Pats -> FilePath -> Maybe [String]
-filePatternWith p = \x -> if eq x then Just $ ex x else Nothing
-    where eq = matchBoolWith p
-          ex = extractWith p
+filePatternWith pats@(Pats o ps) = listToMaybe . match ps . split isPathSeparator
+
 
 ---------------------------------------------------------------------
 -- MULTIPATTERN COMPATIBLE SUBSTITUTIONS
