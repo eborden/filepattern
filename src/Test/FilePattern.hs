@@ -2,6 +2,7 @@ module Test.FilePattern(main) where
 
 import Control.Monad
 import Data.List.Extra
+import Data.Maybe
 import System.FilePattern
 import System.FilePattern.Parser(parse)
 import System.FilePattern.Type
@@ -74,6 +75,7 @@ main = do
     let f :: Bool -> FilePattern -> FilePath -> IO ()
         f b pat file = do
             assertBool (b == (pat ?== file)) $ show pat ++ " ?== " ++ show file ++ "\nEXPECTED: " ++ show b
+            assertBool (b == isJust (filePattern pat file)) $ "match " ++ show pat ++ " " ++ show file ++ "\nEXPECTED: isJust _ == " ++ show b
             assertBool (b == walker walk pat file) $ show pat ++ " `walker` " ++ show file ++ "\nEXPECTED: " ++ show b
             when b $ assertBool (norm (substitute (extract pat file) pat) == norm file) $
                 "FAILED substitute/extract property\nPattern: " ++ show pat ++ "\nFile: " ++ show file ++ "\n" ++
