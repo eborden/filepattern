@@ -16,7 +16,7 @@ module System.FilePattern.Legacy
     -- * Optimisation opportunities
     simple,
     -- * Multipattern file rules
-    compatible, extract, substitute,
+    compatible, substitute,
     -- * Accelerated searching
     Walk(..), walk,
     -- * Deprecation path
@@ -78,10 +78,6 @@ simple = simpleWith . parseLegacy
 -- | Like 'FilePattern.compatible' but also deals with @\/\/@ patterns.
 compatible :: [FilePattern] -> Bool
 compatible = compatibleWith . map parseLegacy
-
--- | Like 'FilePattern.extract' but also deals with @\/\/@ patterns.
-extract :: FilePattern -> FilePath -> [String]
-extract = extractWith . parseLegacy
 
 -- | Like 'FilePattern.substitute' but also deals with @\/\/@ patterns.
 substitute :: [String] -> FilePattern -> FilePath

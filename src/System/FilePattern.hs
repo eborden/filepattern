@@ -10,7 +10,7 @@ module System.FilePattern(
     -- * Optimisation opportunities
     simple,
     -- * Multipattern file rules
-    compatible, extract, substitute,
+    compatible, substitute,
     -- * Accelerated searching
     Walk(..), walk
     ) where
@@ -77,13 +77,9 @@ simple = simpleWith . parse
 compatible :: [FilePattern] -> Bool
 compatible = compatibleWith . map parse
 
--- | Extract the items that match the wildcards. The pair must match with '?=='.
-extract :: FilePattern -> FilePath -> [String]
-extract = extractWith . parse
-
--- | Given the result of 'extract', substitute it back in to a 'compatible' pattern.
+-- | Given a successful 'match', substitute it back in to a 'compatible' pattern.
 --
--- > p '?==' x ==> substitute (extract p x) p == x
+-- > p '?==' x ==> substitute (fromJust $ match p x) p == x
 substitute :: [String] -> FilePattern -> FilePath
 substitute xs = substituteWith xs . parse
 

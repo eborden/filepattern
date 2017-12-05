@@ -10,7 +10,7 @@ module System.FilePattern.Core(
     -- * Optimisation opportunities
     simpleWith,
     -- * Multipattern file rules
-    compatibleWith, extractWith, substituteWith,
+    compatibleWith, substituteWith,
     -- * Accelerated searching
     Walk(..), walkWith
     ) where
@@ -115,16 +115,7 @@ compatibleWith :: [Pats] -> Bool
 compatibleWith [] = True
 compatibleWith (x:xs) = all ((==) (specialsWith x) . specialsWith) xs
 
--- | Extract the items that match the wildcards. The pair must match with '?=='.
-extractWith :: Pats -> FilePath -> [String]
-extractWith pats@(Pats o ps) x =
-    case match ps $ split isPathSeparator x of
-        [] | matchBoolWith pats x -> error $ "extract with " ++ show o ++ " and " ++ show x
-           | otherwise -> error $ "Pattern " ++ show o ++ " does not match " ++ x ++ ", when trying to extract the FilePattern matches"
-        ms:_ -> ms
-
-
--- | Given the result of 'extract', substitute it back in to a 'compatible' pattern.
+-- | Given a successful 'match', substitute it back in to a 'compatible' pattern.
 --
 -- > p '?==' x ==> substitute (extract p x) p == x
 substituteWith :: [String] -> Pats -> FilePath
