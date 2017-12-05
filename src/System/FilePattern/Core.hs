@@ -68,10 +68,7 @@ matchStars (Stars pre mid post) x = do
         stripInfixes (m:ms) y = do
             (a,z) <- stripInfix m y
             (a:) <$> stripInfixes ms z
-matchStars (Lit _) _ = Nothing
-matchStars Star _ = Nothing
-matchStars Skip _ = Nothing
-matchStars Skip1 _ = Nothing
+
 
 matchBoolWith :: Pats -> FilePath -> Bool
 matchBoolWith (Pats pat) = case optimise pat of
