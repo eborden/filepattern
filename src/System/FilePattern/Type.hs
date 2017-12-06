@@ -9,7 +9,10 @@ module System.FilePattern.Type(
     isLit, fromLit
     ) where
 
+import Data.Functor
 import Data.List.Extra
+import Prelude
+
 
 -- | A type synonym for file patterns, containing @**@ and @*@. For the syntax
 --   and semantics of 'FilePattern' see '?=='.
