@@ -1,4 +1,3 @@
-{-# LANGUAGE PatternGuards #-}
 
 -- | The types involved
 module System.FilePattern.Type(
