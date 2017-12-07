@@ -43,7 +43,7 @@ match (Skip:xs) (y:ys) = map ("":) (match xs (y:ys)) ++ match (Skip1:xs) (y:ys)
 match (Skip1:xs) (y:ys) = [(y++"/"++r):rs | r:rs <- match (Skip:xs) ys]
 match (Skip:xs) [] = map ("":) $ match xs []
 match (Star:xs) (y:ys) = map (y:) $ match xs ys
-match (Lit x:xs) (y:ys) = concat $ [match xs ys | x == y] ++ [match xs (y:ys) | x == "."]
+match (Lit x:xs) (y:ys) = if x == y then match xs ys else []
 match (Stars x:xs) (y:ys) | Just rs <- wildcard x y = map (rs ++) $ match xs ys
 match [] [] = [[]]
 match _ _ = []
@@ -137,7 +137,7 @@ data Walk = Walk ([String] -> ([String],[(String,Walk)]))
 walkWith :: [Pats] -> (Bool, Walk)
 walkWith patterns = (any (\p -> isEmpty p || not (null $ match p [""])) ps2, f ps2)
     where
-        ps2 = map (filter (/= Lit ".") . optimise . fromPats) patterns
+        ps2 = map (optimise . fromPats) patterns
 
         f (nubOrd -> ps)
             | all isLit fin, all (isLit . fst) nxt = WalkTo (map fromLit fin, map (fromLit *** f) nxt)
