@@ -43,11 +43,11 @@ newtype Path    = Path    FilePath    deriving (Show,Eq)
 -- Since / and * are the only "interesting" elements, just add ab to round out the set
 
 instance Arbitrary Pattern where
-    arbitrary = fmap Pattern $ listOf $ elements "\\/*ab"
+    arbitrary = fmap Pattern $ listOf $ elements "\\/*ab."
     shrink (Pattern x) = map Pattern $ shrinkList (\x -> ['/' | x == '\\']) x
 
 instance Arbitrary Path where
-    arbitrary = fmap Path $ listOf $ elements "\\/ab"
+    arbitrary = fmap Path $ listOf $ elements "\\/ab."
     shrink (Path x) = map Path $ shrinkList (\x -> ['/' | x == '\\']) x
 
 
