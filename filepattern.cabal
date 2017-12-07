@@ -50,8 +50,6 @@ test-suite filepattern-test
         filepath,
         QuickCheck >= 2.0
     other-modules:
-        Test.FilePattern
-        Test.FilePattern.Legacy
         System.FilePattern
         System.FilePattern.Core
         System.FilePattern.Legacy
