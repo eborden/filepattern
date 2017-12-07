@@ -346,7 +346,7 @@ testMatch Switch{..} = do
     no "/file" "file"
     yes "foo/./bar" "foo/bar" []
     yes "foo/./bar" "foo/./bar" []
-    no "foo/./bar" "foo/bob"
+    yes "foo/./bar" "foo/bar" []
 
 
 testWalk :: Switch -> IO ()

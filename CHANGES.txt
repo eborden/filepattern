@@ -1,5 +1,6 @@
 Changelog for filepattern
 
+    #2, always ignore . in both FilePattern and FilePath
     #1, make relative FilePatterns match absolute FilePaths
     Rename filePattern to match, delete extract
     Have legacy and non-legacy modules

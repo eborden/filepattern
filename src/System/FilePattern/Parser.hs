@@ -51,6 +51,7 @@ parseLexeme = f False True
         -- slash = I am either at the start, or my previous character was Slash
         f _ slash [] = [Lit "" | slash]
         f _ _ (Str "**":xs) = Skip : f True False xs
+        f _ _ (Str ".":xs) = f True False xs
         f _ _ (Str x:xs) = parseLit x : f True False xs
         f str _ (SlashSlash:Slash:xs) | not str = Skip1 : f str True xs
         f str _ (SlashSlash:xs) = Skip : f str False xs
