@@ -380,7 +380,7 @@ testProperties :: Switch -> [String] -> IO ()
 testProperties switch@Switch{..} xs = do
     forM_ xs $ \x -> forM_ xs $ \y -> prop x y
     Success{} <- quickCheckWithResult stdArgs{maxSuccess=10000} $ \(Pattern p) (Path x) ->
-        (if matchBool p x then label "Match" else property) $ unsafePerformIO $ prop p x >> return True
+        (if matchBool p x then label "match" else property) $ unsafePerformIO $ prop p x >> return True
     return ()
     where
         prop :: FilePattern -> FilePath -> IO ()
