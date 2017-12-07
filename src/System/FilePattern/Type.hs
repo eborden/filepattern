@@ -6,7 +6,8 @@ module System.FilePattern.Type(
     Pat(..),
     Wildcard(..),
     wildcard,
-    isLit, fromLit
+    isLit, fromLit,
+    star
     ) where
 
 import Data.Functor
@@ -46,12 +47,13 @@ wildcard (Wildcard pre mid post) x = do
 
 
 data Pat = Lit String -- ^ foo
-         | Star   -- ^ /*/
          | Skip -- ^ //
          | Stars (Wildcard String) -- ^ *foo*, prefix (fixed), infix floaters, suffix
                           -- e.g. *foo*bar = Stars "" ["foo"] "bar"
             deriving (Show,Eq,Ord)
 
+star :: Pat
+star = Stars $ Wildcard "" [] ""
 
 isLit :: Pat -> Bool
 isLit Lit{} = True

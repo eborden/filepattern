@@ -30,7 +30,6 @@ import System.FilePath (isPathSeparator)
 -- | Optimisations that may change the matched expressions
 optimise :: [Pat] -> [Pat]
 optimise (Skip:Skip:xs) = optimise $ Skip:xs
-optimise (Star:Skip:xs) = optimise $ Skip:Star:xs
 optimise (x:xs) = x : optimise xs
 optimise [] = []
 
@@ -42,7 +41,6 @@ match (Skip:xs) (y:ys) =
     map ("":) (match xs (y:ys)) ++
     [(y++"/"++r):rs | r:rs <- match (Skip:xs) ys]
 match (Skip:xs) [] = map ("":) $ match xs []
-match (Star:xs) (y:ys) = map (y:) $ match xs ys
 match (Lit x:xs) (y:ys) = if x == y then match xs ys else []
 match (Stars x:xs) (y:ys) | Just rs <- wildcard x y = map (rs ++) $ match xs ys
 match [] [] = [[]]
@@ -52,7 +50,6 @@ match _ _ = []
 matchOne :: Pat -> String -> Bool
 matchOne (Lit x) y = x == y
 matchOne (Stars x) y = isJust $ wildcard x y
-matchOne Star _ = True
 matchOne Skip _ = False
 
 
@@ -78,13 +75,12 @@ matchWith (Pats ps) = listToMaybe . match ps . (\x -> if null x then [""] else x
 ---------------------------------------------------------------------
 -- MULTIPATTERN COMPATIBLE SUBSTITUTIONS
 
-specialsWith :: Pats -> [Pat]
+specialsWith :: Pats -> [Int]
 specialsWith = concatMap f . fromPats
     where
         f Lit{} = []
-        f Star = [Star]
-        f Skip = [Skip]
-        f (Stars (Wildcard _ xs _)) = replicate (length xs + 1) Star
+        f Skip = [0]
+        f (Stars (Wildcard _ xs _)) = replicate (length xs + 1) 1
 
 -- | Is the pattern free from any * and //.
 simpleWith :: Pats -> Bool
@@ -106,13 +102,11 @@ substituteWith func parts (pat, Pats ps)
                 ", for the pattern " ++ show pat ++ " and parts " ++ show parts
     | otherwise = intercalate "/" $ concat $ snd $ mapAccumL f parts ps
     where
-        count Star = 1
         count Skip = 1
         count Lit{} = 0
         count (Stars (Wildcard _ mid _)) = length mid + 1
 
         f ms (Lit x) = (ms, [x])
-        f (m:ms) Star = (ms, [m])
         f (m:ms) Skip = (ms, splitSep m)
         f ms (Stars (Wildcard pre mid post)) = (ms2, [concat $ pre : zipWith (++) ms1 (mid++[post])])
             where (ms1,ms2) = splitAt (length mid + 1) ms
@@ -141,18 +135,18 @@ walkWith patterns = (any (\p -> isEmpty p || not (null $ match p [""])) ps2, f p
                 (if finStar then xs else filter (\x -> any (`matchOne` x) fin) xs
                 ,[(x, f ys) | x <- xs, let ys = concat [b | (a,b) <- nxt, matchOne a x], not $ null ys])
             where
-                finStar = Star `elem` fin
+                finStar = star `elem` fin
                 fin = nubOrd $ mapMaybe final ps
                 nxt = groupSort $ concatMap next ps
 
 
 next :: [Pat] -> [(Pat, [Pat])]
-next (Skip:xs) = (Star,Skip:xs) : next xs
+next (Skip:xs) = (star,Skip:xs) : next xs
 next (x:xs) = [(x,xs) | not $ null xs]
 next [] = []
 
 final :: [Pat] -> Maybe Pat
-final (Skip:xs) = if isEmpty xs then Just Star else final xs
+final (Skip:xs) = if isEmpty xs then Just star else final xs
 final (x:xs) = if isEmpty xs then Just x else Nothing
 final [] = Nothing
 
