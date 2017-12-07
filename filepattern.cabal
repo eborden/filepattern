@@ -48,6 +48,7 @@ test-suite filepattern-test
         base == 4.*,
         extra,
         filepath,
+        containers,
         QuickCheck >= 2.0
     other-modules:
         System.FilePattern
