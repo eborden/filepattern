@@ -378,7 +378,7 @@ testWalk Switch{..} = do
 testProperties :: Switch -> [String] -> IO ()
 testProperties switch@Switch{..} xs = do
     forM_ xs $ \x -> forM_ xs $ \y -> prop x y
-    Success{} <- quickCheckWithResult stdArgs{maxSuccess=1000} $ \(Pattern p) (Path x) ->
+    Success{} <- quickCheckWithResult stdArgs{maxSuccess=10000} $ \(Pattern p) (Path x) ->
         (if matchBool p x then property else label "No match") $ unsafePerformIO $ prop p x >> return True
     return ()
     where
