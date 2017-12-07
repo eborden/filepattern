@@ -73,7 +73,7 @@ matchBoolWith (Pats pat) = isJust . matchWith (Pats $ optimise pat)
 --   Note that the @**@ will often contain a trailing @\/@, and even on Windows any
 --   @\\@ separators will be replaced by @\/@.
 matchWith :: Pats -> FilePath -> Maybe [String]
-matchWith (Pats ps) = listToMaybe . match ps . filter (/= ".") . split isPathSeparator
+matchWith (Pats ps) = listToMaybe . match ps . (\x -> if null x then [""] else x) . filter (/= ".") . split isPathSeparator
 
 
 ---------------------------------------------------------------------

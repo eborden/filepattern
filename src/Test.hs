@@ -96,9 +96,11 @@ unsafeSwitchTrace Switch{..} = do
 
 -- | Write 'matchBool' in terms of 'walker'.
 walkerMatch :: Switch -> FilePattern -> FilePath -> Bool
-walkerMatch Switch{..} a b = f (split isPathSeparator b) $ snd $ walk [a]
+walkerMatch Switch{..} a b = if null b2 then empty else f b2 w
     where
-        f (".":xs) w = f xs w
+        b2 = filter (/= ".") $ split isPathSeparator b
+        (empty, w) = walk [a]
+
         f (x:xs) (Walk op) = f (x:xs) $ WalkTo $ op [x]
         f [x]    (WalkTo (file, dir)) = x `elem` file
         f (x:xs) (WalkTo (file, dir)) | Just w <- lookup x dir = f xs w
@@ -387,9 +389,8 @@ testProperties switch@Switch{..} xs = do
             let b = matchBool pat file
             let fields = ["Name" #= name, "Pattern" #= pat, "File" #= file, "?==" #= b]
             let res = match pat file in assertBool (b == isJust (match pat file)) "match" $ fields ++ ["match" #= res]
-            unless ('.' `elem` file) $
-                let res = walkerMatch switch pat file in assertBool (b == res) "walker" $ fields ++ ["walker" #= res]
+            let res = walkerMatch switch pat file in assertBool (b == res) "walker" $ fields ++ ["walker" #= res]
             let res = compatible [pat,pat] in assertBool res "compatible" fields
-            let norm = filter (/= ".") . split isPathSeparator . (\x -> if x == "." then "" else x)
+            let norm = (\x -> if x == [] then [""] else x) . filter (/= ".") . split isPathSeparator
             when b $ let res = substitute (fromJust $ match pat file) pat in
-                assertBool (norm res == norm file) "substitute" $ fields ++ ["Match" #= match pat file, "Got" #= res]
+                assertBool (norm res == norm file) "substitute" $ fields ++ ["Match" #= match pat file, "Got" #= res, "Input (norm)" #= norm file, "Got (norm)" #= norm res]
