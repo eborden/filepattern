@@ -16,6 +16,7 @@ import qualified Data.Set as Set
 import System.FilePath(isPathSeparator, (</>))
 import Data.IORef
 import System.IO.Unsafe
+import System.Info.Extra
 import Test.QuickCheck
 
 
@@ -338,8 +339,9 @@ testMatch Switch{..} = do
     yes "**" "/" ["//"]
     yes "**/x" "/x" ["/"]
     yes "**" "x/" ["x//"]
-    yes "**" "\\\\drive" ["//drive/"]
-    yes "**" "C:\\drive" ["C:/drive/"]
+    let s = if isWindows then '/' else '\\'
+    yes "**" "\\\\drive" [s:s:"drive/"]
+    yes "**" "C:\\drive" ["C:"++s:"drive/"]
     yes "**" "C:drive" ["C:drive/"]
 
     -- We support ignoring '.' values in FilePath as they are inserted by @filepath@ a lot
