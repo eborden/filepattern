@@ -82,7 +82,7 @@ compatible = compatibleWith . map parseLegacy
 
 -- | Like 'System.FilePattern.substitute' but also deals with @\/\/@ patterns.
 substitute :: Partial => [String] -> FilePattern -> FilePath
-substitute xs = substituteWith xs . parseLegacy
+substitute xs x = substituteWith "System.FilePattern.Legacy.substitute" xs (x, parseLegacy x)
 
 
 ---------------------------------------------------------------------

@@ -103,16 +103,27 @@ compatibleWith (x:xs) = all ((==) (specialsWith x) . specialsWith) xs
 -- | Given a successful 'match', substitute it back in to a 'compatible' pattern.
 --
 -- > p '?==' x ==> substitute (extract p x) p == x
-substituteWith oms (Pats oxs) = intercalate "/" $ concat $ snd $ mapAccumL f oms oxs
-substituteWith :: Partial => [String] -> Pats -> FilePath
+substituteWith :: Partial => String -> [String] -> (FilePattern, Pats) -> FilePath
+substituteWith func parts (pat, Pats ps)
+    | let want = sum $ map count ps, let got = length parts, want /= got =
+        error $ func ++ " given the wrong number of parts, wanted " ++
+                show want ++ ", got " ++ show got ++
+                ", for the pattern " ++ show pat ++ " and parts " ++ show parts
+    | otherwise = intercalate "/" $ concat $ snd $ mapAccumL f parts ps
     where
+        count Star = 1
+        count Skip = 1
+        count Skip1 = 1
+        count Lit{} = 0
+        count (Stars (Wildcard _ mid _)) = length mid + 1
+
         f ms (Lit x) = (ms, [x])
         f (m:ms) Star = (ms, [m])
         f (m:ms) Skip = (ms, splitSep m)
         f (m:ms) Skip1 = (ms, splitSep m)
         f ms (Stars (Wildcard pre mid post)) = (ms2, [concat $ pre : zipWith (++) ms1 (mid++[post])])
             where (ms1,ms2) = splitAt (length mid + 1) ms
-        f _ _ = error $ "Substitution failed into pattern " ++ show oxs ++ " with " ++ show (length oms) ++ " matches, namely " ++ show oms
+        f _ _ = error $ "substitution, internal error, with " ++ show parts ++ " " ++ show ps
 
         splitSep = linesBy (== '/')
 

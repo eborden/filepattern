@@ -6,7 +6,6 @@ module Main(main) where
 import Control.Exception.Extra
 import Control.Monad
 import Data.List.Extra
-import Data.Either.Extra
 import Data.Maybe
 import System.FilePattern.Type
 import System.FilePattern(Walk(..))
@@ -27,9 +26,12 @@ assertBool :: Bool -> String -> [String] -> IO ()
 assertBool b msg fields = unless b $ error $ unlines $
     ("ASSERTION FAILED: " ++ msg) : fields
 
-assertException :: Show a => a -> String -> [String] -> IO ()
-assertException a msg fields = assertBool b msg $ ("Expected" #= "Exception") : fields
-    where b = isLeft $ unsafePerformIO $ try_ $ evaluate $ length $ show a
+assertException :: IO () -> [String] -> String -> [String] -> IO ()
+assertException a parts msg fields = do
+    res <- try_ a
+    case res of
+        Left e -> assertBool (all (`isInfixOf` show e) parts) msg $ ["Expected" #= parts, "Got" #= e] ++ fields
+        Right _ -> assertBool False msg $ ["Expected" #= parts, "Got" #= "<No exception>"] ++ fields
 
 (#=) :: Show a => String -> a -> String
 (#=) a b = a ++ ": " ++ show b
@@ -217,8 +219,10 @@ testSubstitute Switch{..} = do
     f ["","test","da"] "**/*a*.txt" "testada.txt"
     when legacy $ f ["foo/bar/","test"] "//*a.txt" "foo/bar/testa.txt"
     f ["foo/bar/","test"] "**/*a.txt" "foo/bar/testa.txt"
-    f ["test"] "nothing" "nothing" -- don't error if there are too many replacements
-    assertException (substitute ["test"] "*/*") "substitute" [] -- do error if there are not enough
+    let deep = void . evaluate . length . show
+    -- error if the number of replacements is wrong
+    assertException (deep $ substitute ["test"] "nothing") ["substitute","wanted 0","got 1","test","nothing"] "substitute" []
+    assertException (deep $ substitute ["test"] "*/*") ["substitute","wanted 2","got 1","test","*/*"] "substitute" []
 
 
 testMatch :: Switch -> IO ()

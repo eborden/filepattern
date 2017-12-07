@@ -80,12 +80,14 @@ compatible :: [FilePattern] -> Bool
 compatible = compatibleWith . map parse
 
 -- | Given a successful 'match', substitute it back in to a 'compatible' pattern.
+--   Raises an error if there are not exactly the right number of substitutions,
+--   indicating the patterns were not compatible.
 --
 -- @
 -- p '?==' x ==> 'substitute' (fromJust $ 'match' p x) p == x
 -- @
 substitute :: Partial => [String] -> FilePattern -> FilePath
-substitute xs = substituteWith xs . parse
+substitute xs x = substituteWith "System.FilePattern.substitute" xs (x, parse x)
 
 
 ---------------------------------------------------------------------
