@@ -16,6 +16,7 @@ import qualified Data.Set as Set
 import System.FilePath(isPathSeparator, (</>))
 import Data.IORef
 import System.IO.Unsafe
+import System.Info.Extra
 import Test.QuickCheck
 import Data.Functor
 import Prelude
@@ -86,7 +87,7 @@ unsafeSwitchTrace Switch{..} = do
     let add f x = adds (f . head) [x]
     let get = Set.toList <$> readIORef seen
     return $ (,) get $ Switch name legacy
-        (add parse) 
+        (add parse)
         (add . add matchBool)
         (add . add match)
         (add simple)
@@ -159,34 +160,34 @@ testParser :: Switch -> IO ()
 testParser Switch{..} = do
     let x # y = assertBool (res == y) "testParser" ["Name" #= name, "Input" #= x, "Expected" #= y, "Got" #= res]
             where Pats res = parse x
-    "" # [Lit ""]
-    "x" # [Lit "x"]
-    "/" # [Lit "",Lit ""]
-    "x/" # [Lit "x",Lit ""]
-    "/x" # [Lit "",Lit "x"]
-    "x/y" # [Lit "x",Lit "y"]
-    "//" # if legacy then [Skip] else [Lit "", Lit ""]
+    "" # [lit ""]
+    "x" # [lit "x"]
+    "/" # [lit "",lit ""]
+    "x/" # [lit "x",lit ""]
+    "/x" # [lit "",lit "x"]
+    "x/y" # [lit "x",lit "y"]
+    "//" # if legacy then [Skip] else [lit "", lit ""]
     "**" # [Skip]
-    "//x" # if legacy then [Skip, Lit "x"] else [Lit "", Lit "x"]
-    "**/x" # [Skip, Lit "x"]
-    "x//" # if legacy then [Lit "x", Skip] else [Lit "x", Lit ""]
-    "x/**" # [Lit "x", Skip]
-    "x//y" # if legacy then [Lit "x",Skip, Lit "y"] else [Lit "x", Lit "y"]
-    "///" # if legacy then [Skip1, Lit ""] else [Lit "", Lit ""]
+    "//x" # if legacy then [Skip, lit "x"] else [lit "", lit "x"]
+    "**/x" # [Skip, lit "x"]
+    "x//" # if legacy then [lit "x", Skip] else [lit "x", lit ""]
+    "x/**" # [lit "x", Skip]
+    "x//y" # if legacy then [lit "x",Skip, lit "y"] else [lit "x", lit "y"]
+    "///" # if legacy then [star, Skip, lit ""] else [lit "", lit ""]
     "**/**" # [Skip,Skip]
-    "**/**/" # [Skip, Skip, Lit ""]
-    "///x" # if legacy then [Skip1, Lit "x"] else [Lit "", Lit "x"]
-    "**/x" # [Skip, Lit "x"]
-    "x///" # if legacy then [Lit "x", Skip, Lit ""] else [Lit "x", Lit ""]
-    "x/**/" # [Lit "x", Skip, Lit ""]
-    "x///y" # if legacy then [Lit "x",Skip, Lit "y"] else [Lit "x", Lit "y"]
-    "x/**/y" # [Lit "x",Skip, Lit "y"]
-    "////" # if legacy then [Skip, Skip] else [Lit "", Lit ""]
+    "**/**/" # [Skip, Skip, lit ""]
+    "///x" # if legacy then [star, Skip, lit "x"] else [lit "", lit "x"]
+    "**/x" # [Skip, lit "x"]
+    "x///" # if legacy then [lit "x", Skip, lit ""] else [lit "x", lit ""]
+    "x/**/" # [lit "x", Skip, lit ""]
+    "x///y" # if legacy then [lit "x",Skip, lit "y"] else [lit "x", lit "y"]
+    "x/**/y" # [lit "x",Skip, lit "y"]
+    "////" # if legacy then [Skip, Skip] else [lit "", lit ""]
     "**/**/**" # [Skip, Skip, Skip]
-    "////x" # if legacy then [Skip, Skip, Lit "x"] else [Lit "", Lit "x"]
-    "x////" # if legacy then [Lit "x", Skip, Skip] else [Lit "x", Lit ""]
-    "x////y" # if legacy then [Lit "x",Skip, Skip, Lit "y"] else [Lit "x", Lit "y"]
-    "**//x" # if legacy then [Skip, Skip, Lit "x"] else [Skip, Lit "x"]
+    "////x" # if legacy then [Skip, Skip, lit "x"] else [lit "", lit "x"]
+    "x////" # if legacy then [lit "x", Skip, Skip] else [lit "x", lit ""]
+    "x////y" # if legacy then [lit "x",Skip, Skip, lit "y"] else [lit "x", lit "y"]
+    "**//x" # if legacy then [Skip, Skip, lit "x"] else [Skip, lit "x"]
 
 
 testSimple :: Switch -> IO ()
@@ -288,11 +289,11 @@ testMatch Switch{..} = do
     yes "a/**" "a" [""]
     diff "/a//" "/a/" ["/"] []
     yes "/a/**" "/a" [""]
-    old "///a//" "/a" ["/",""]
-    diff "///a//" "/a/" ["/","/"] []
+    old "///a//" "/a" ["","",""]
+    diff "///a//" "/a/" ["","","/"] []
     yes "**/a/**" "/a" ["/",""]
     no "///" ""
-    diff "///" "/" ["/"] []
+    diff "///" "/" ["",""] []
     yes "/**" "/" ["/"]
     yes "**/" "a/" ["a/"]
     diff "////" "/" ["","//"] []
@@ -340,8 +341,9 @@ testMatch Switch{..} = do
     yes "**" "/" ["//"]
     yes "**/x" "/x" ["/"]
     yes "**" "x/" ["x//"]
-    yes "**" "\\\\drive" ["//drive/"]
-    yes "**" "C:\\drive" ["C:/drive/"]
+    let s = if isWindows then '/' else '\\'
+    yes "**" "\\\\drive" [s:s:"drive/"]
+    yes "**" "C:\\drive" ["C:"++s:"drive/"]
     yes "**" "C:drive" ["C:drive/"]
 
     -- We support ignoring '.' values in FilePath as they are inserted by @filepath@ a lot
@@ -382,7 +384,7 @@ testProperties :: Switch -> [String] -> IO ()
 testProperties switch@Switch{..} xs = do
     forM_ xs $ \x -> forM_ xs $ \y -> prop x y
     Success{} <- quickCheckWithResult stdArgs{maxSuccess=10000} $ \(Pattern p) (Path x) ->
-        (if matchBool p x then property else label "No match") $ unsafePerformIO $ prop p x >> return True
+        (if matchBool p x then label "match" else property) $ unsafePerformIO $ prop p x >> return True
     return ()
     where
         prop :: FilePattern -> FilePath -> IO ()
