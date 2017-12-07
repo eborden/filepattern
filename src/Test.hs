@@ -17,6 +17,8 @@ import System.FilePath(isPathSeparator, (</>))
 import Data.IORef
 import System.IO.Unsafe
 import Test.QuickCheck
+import Data.Functor
+import Prelude
 
 
 ---------------------------------------------------------------------
