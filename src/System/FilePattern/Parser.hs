@@ -54,7 +54,7 @@ parseLexeme = f False True
         f str slash (Str ".":Slash:xs) = f str slash xs
         f str slash (Str ".":xs) = f str slash xs
         f _ _ (Str x:xs) = parseLit x : f True False xs
-        f str _ (SlashSlash:Slash:xs) | not str = Skip1 : f str True xs
+        f str _ (SlashSlash:Slash:xs) | not str = Star : Skip : f str True xs
         f str _ (SlashSlash:xs) = Skip : f str False xs
         f str _ (Slash:xs) = [Lit "" | not str] ++ f str True xs
 

@@ -29,7 +29,6 @@ import System.FilePath (isPathSeparator)
 
 -- | Optimisations that may change the matched expressions
 optimise :: [Pat] -> [Pat]
-optimise (Skip1:xs) = optimise $ Star:Skip:xs
 optimise (Skip:Skip:xs) = optimise $ Skip:xs
 optimise (Star:Skip:xs) = optimise $ Skip:Star:xs
 optimise (x:xs) = x : optimise xs
@@ -39,8 +38,9 @@ optimise [] = []
 -- | Given a pattern, and a list of path components, return a list of all matches
 --   (for each wildcard in order, what the wildcard matched).
 match :: [Pat] -> [String] -> [[String]]
-match (Skip:xs) (y:ys) = map ("":) (match xs (y:ys)) ++ match (Skip1:xs) (y:ys)
-match (Skip1:xs) (y:ys) = [(y++"/"++r):rs | r:rs <- match (Skip:xs) ys]
+match (Skip:xs) (y:ys) =
+    map ("":) (match xs (y:ys)) ++
+    [(y++"/"++r):rs | r:rs <- match (Skip:xs) ys]
 match (Skip:xs) [] = map ("":) $ match xs []
 match (Star:xs) (y:ys) = map (y:) $ match xs ys
 match (Lit x:xs) (y:ys) = if x == y then match xs ys else []
@@ -54,7 +54,6 @@ matchOne (Lit x) y = x == y
 matchOne (Stars x) y = isJust $ wildcard x y
 matchOne Star _ = True
 matchOne Skip _ = False
-matchOne Skip1 _ = False
 
 
 matchBoolWith :: Pats -> FilePath -> Bool
@@ -85,7 +84,6 @@ specialsWith = concatMap f . fromPats
         f Lit{} = []
         f Star = [Star]
         f Skip = [Skip]
-        f Skip1 = [Skip]
         f (Stars (Wildcard _ xs _)) = replicate (length xs + 1) Star
 
 -- | Is the pattern free from any * and //.
@@ -110,14 +108,12 @@ substituteWith func parts (pat, Pats ps)
     where
         count Star = 1
         count Skip = 1
-        count Skip1 = 1
         count Lit{} = 0
         count (Stars (Wildcard _ mid _)) = length mid + 1
 
         f ms (Lit x) = (ms, [x])
         f (m:ms) Star = (ms, [m])
         f (m:ms) Skip = (ms, splitSep m)
-        f (m:ms) Skip1 = (ms, splitSep m)
         f ms (Stars (Wildcard pre mid post)) = (ms2, [concat $ pre : zipWith (++) ms1 (mid++[post])])
             where (ms1,ms2) = splitAt (length mid + 1) ms
         f _ _ = error $ "substitution, internal error, with " ++ show parts ++ " " ++ show ps
@@ -151,14 +147,12 @@ walkWith patterns = (any (\p -> isEmpty p || not (null $ match p [""])) ps2, f p
 
 
 next :: [Pat] -> [(Pat, [Pat])]
-next (Skip1:xs) = [(Star,Skip:xs)]
 next (Skip:xs) = (Star,Skip:xs) : next xs
 next (x:xs) = [(x,xs) | not $ null xs]
 next [] = []
 
 final :: [Pat] -> Maybe Pat
 final (Skip:xs) = if isEmpty xs then Just Star else final xs
-final (Skip1:xs) = if isEmpty xs then Just Star else Nothing
 final (x:xs) = if isEmpty xs then Just x else Nothing
 final [] = Nothing
 
