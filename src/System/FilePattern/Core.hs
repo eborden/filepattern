@@ -1,5 +1,6 @@
 {-# LANGUAGE PatternGuards #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE ConstraintKinds #-}
 
 -- | This library supports patterns containing @*@ and @**@, but also
 --   \"legacy\" patterns including @\/\/@ as well.
