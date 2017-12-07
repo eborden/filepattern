@@ -84,7 +84,7 @@ unsafeSwitchTrace Switch{..} = do
     let add f x = adds (f . head) [x]
     let get = Set.toList <$> readIORef seen
     return $ (,) get $ Switch name legacy
-        (add parse) 
+        (add parse)
         (add . add matchBool)
         (add . add match)
         (add simple)
