@@ -23,6 +23,7 @@ module System.FilePattern.Legacy
     addUnsafeLegacyWarning
     ) where
 
+import Control.Exception.Extra
 import Data.Maybe
 import System.FilePattern.Core
 import System.FilePattern.Parser(parseLegacy, addUnsafeLegacyWarning)
@@ -80,7 +81,7 @@ compatible :: [FilePattern] -> Bool
 compatible = compatibleWith . map parseLegacy
 
 -- | Like 'System.FilePattern.substitute' but also deals with @\/\/@ patterns.
-substitute :: [String] -> FilePattern -> FilePath
+substitute :: Partial => [String] -> FilePattern -> FilePath
 substitute xs = substituteWith xs . parseLegacy
 
 

@@ -15,6 +15,7 @@ module System.FilePattern(
     Walk(..), walk
     ) where
 
+import Control.Exception.Extra
 import Data.Maybe
 import System.FilePattern.Core
 import System.FilePattern.Parser(parse)
@@ -83,7 +84,7 @@ compatible = compatibleWith . map parse
 -- @
 -- p '?==' x ==> 'substitute' (fromJust $ 'match' p x) p == x
 -- @
-substitute :: [String] -> FilePattern -> FilePath
+substitute :: Partial => [String] -> FilePattern -> FilePath
 substitute xs = substituteWith xs . parse
 
 

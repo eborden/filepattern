@@ -27,7 +27,7 @@ library
     hs-source-dirs: src
     build-depends:
         base == 4.*,
-        extra >= 1.5.3,
+        extra >= 1.6.2,
         filepath
     exposed-modules:
         System.FilePattern

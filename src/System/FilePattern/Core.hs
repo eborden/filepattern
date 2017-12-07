@@ -15,6 +15,7 @@ module System.FilePattern.Core(
     Walk(..), walkWith
     ) where
 
+import Control.Exception.Extra
 import Data.List.Extra
 import Data.Maybe
 import Data.Tuple.Extra
@@ -102,8 +103,8 @@ compatibleWith (x:xs) = all ((==) (specialsWith x) . specialsWith) xs
 -- | Given a successful 'match', substitute it back in to a 'compatible' pattern.
 --
 -- > p '?==' x ==> substitute (extract p x) p == x
-substituteWith :: [String] -> Pats -> FilePath
 substituteWith oms (Pats oxs) = intercalate "/" $ concat $ snd $ mapAccumL f oms oxs
+substituteWith :: Partial => [String] -> Pats -> FilePath
     where
         f ms (Lit x) = (ms, [x])
         f (m:ms) Star = (ms, [m])
