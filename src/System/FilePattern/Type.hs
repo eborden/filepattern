@@ -47,7 +47,7 @@ wildcard (Wildcard pre mid post) x = do
 
 
 data Pat = Lit String -- ^ foo
-         | Skip -- ^ //
+         | Skip -- ^ /**/
          | Stars (Wildcard String) -- ^ *foo*, prefix (fixed), infix floaters, suffix
                           -- e.g. *foo*bar = Stars "" ["foo"] "bar"
             deriving (Show,Eq,Ord)
