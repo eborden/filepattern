@@ -58,10 +58,7 @@ matchOne Skip1 _ = False
 
 
 matchBoolWith :: Pats -> FilePath -> Bool
-matchBoolWith (Pats pat) = case optimise pat of
-    [x] | x == Skip || x == Skip1 -> const True
-        -- Skip1 is safe because split NEVER returns null
-    p -> not . null . match p . split isPathSeparator
+matchBoolWith (Pats pat) = isJust . matchWith (Pats $ optimise pat)
 
 
 -- | Like '?==', but returns 'Nothing' on if there is no match, otherwise 'Just' with the list
