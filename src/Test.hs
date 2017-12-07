@@ -16,7 +16,7 @@ import qualified Data.Set as Set
 import System.FilePath(isPathSeparator, (</>))
 import Data.IORef
 import System.IO.Unsafe
-import Test.QuickCheck hiding ((===))
+import Test.QuickCheck
 
 
 ---------------------------------------------------------------------
@@ -82,15 +82,14 @@ unsafeSwitchTrace Switch{..} = do
             modifyIORef' seen $ \mp -> foldl' (flip Set.insert) mp xs
             return $ f xs
     let add f x = adds (f . head) [x]
-    let add2 f x y = add (f x) y
     let get = Set.toList <$> readIORef seen
     return $ (,) get $ Switch name legacy
         (add parse) 
-        (add2 $ add matchBool)
-        (add2 $ add match)
+        (add . add matchBool)
+        (add . add match)
         (add simple)
         (adds compatible)
-        (add2 $ adds substitute)
+        (add . adds substitute)
         (adds walk)
 
 
@@ -391,6 +390,6 @@ testProperties switch@Switch{..} xs = do
             let res = match pat file in assertBool (b == isJust (match pat file)) "match" $ fields ++ ["match" #= res]
             let res = walkerMatch switch pat file in assertBool (b == res) "walker" $ fields ++ ["walker" #= res]
             let res = compatible [pat,pat] in assertBool res "compatible" fields
-            let norm = (\x -> if x == [] then [""] else x) . filter (/= ".") . split isPathSeparator
+            let norm = (\x -> if null x then [""] else x) . filter (/= ".") . split isPathSeparator
             when b $ let res = substitute (fromJust $ match pat file) pat in
                 assertBool (norm res == norm file) "substitute" $ fields ++ ["Match" #= match pat file, "Got" #= res, "Input (norm)" #= norm file, "Got (norm)" #= norm res]
