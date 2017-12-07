@@ -6,7 +6,7 @@ module System.FilePattern.Type(
     Pat(..),
     Wildcard(..),
     wildcard,
-    isLit, fromLit,
+    lit, isLit, fromLit,
     star
     ) where
 
@@ -31,10 +31,12 @@ newtype Pats = Pats {fromPats :: [Pat]}
     deriving (Eq,Show)
 
 data Wildcard a = Wildcard a [a] a
+                | Literal a
     deriving (Show,Eq,Ord)
 
 -- Only return the first (all patterns left-most) valid star matching
 wildcard :: Eq a => Wildcard [a] -> [a] -> Maybe [[a]]
+wildcard (Literal mid) x = if mid == x then Just [] else Nothing
 wildcard (Wildcard pre mid post) x = do
     y <- stripPrefix pre x
     z <- if null post then Just y else stripSuffix post y
@@ -46,8 +48,7 @@ wildcard (Wildcard pre mid post) x = do
             (a:) <$> stripInfixes ms z
 
 
-data Pat = Lit String -- ^ foo
-         | Skip -- ^ /**/
+data Pat = Skip -- ^ /**/
          | Stars (Wildcard String) -- ^ *foo*, prefix (fixed), infix floaters, suffix
                           -- e.g. *foo*bar = Stars "" ["foo"] "bar"
             deriving (Show,Eq,Ord)
@@ -55,10 +56,13 @@ data Pat = Lit String -- ^ foo
 star :: Pat
 star = Stars $ Wildcard "" [] ""
 
+lit :: String -> Pat
+lit = Stars . Literal
+
 isLit :: Pat -> Bool
-isLit Lit{} = True
+isLit (Stars Literal{}) = True
 isLit _ = False
 
 fromLit :: Pat -> String
-fromLit (Lit x) = x
+fromLit (Stars (Literal x)) = x
 fromLit _ = error "fromLit: applied to non Lit"

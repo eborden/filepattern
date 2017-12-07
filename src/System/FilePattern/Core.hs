@@ -42,14 +42,12 @@ match (Skip:xs) (y:ys) =
     map ("":) (match xs (y:ys)) ++
     [(y++"/"++r):rs | r:rs <- match (Skip:xs) ys]
 match (Skip:xs) [] = map ("":) $ match xs []
-match (Lit x:xs) (y:ys) = if x == y then match xs ys else []
 match (Stars x:xs) (y:ys) | Just rs <- wildcard x y = map (rs ++) $ match xs ys
 match [] [] = [[]]
 match _ _ = []
 
 
 matchOne :: Pat -> String -> Bool
-matchOne (Lit x) y = x == y
 matchOne (Stars x) y = isJust $ wildcard x y
 matchOne Skip _ = False
 
@@ -79,9 +77,9 @@ matchWith (Pats ps) = listToMaybe . match ps . (\x -> if null x then [""] else x
 specialsWith :: Pats -> [Int]
 specialsWith = concatMap f . fromPats
     where
-        f Lit{} = []
         f Skip = [0]
         f (Stars (Wildcard _ xs _)) = replicate (length xs + 1) 1
+        f (Stars Literal{}) = []
 
 -- | Is the pattern free from any * and //.
 simpleWith :: Pats -> Bool
@@ -104,10 +102,10 @@ substituteWith func parts (pat, Pats ps)
     | otherwise = intercalate "/" $ concat $ snd $ mapAccumL f parts ps
     where
         count Skip = 1
-        count Lit{} = 0
+        count (Stars Literal{}) = 0
         count (Stars (Wildcard _ mid _)) = length mid + 1
 
-        f ms (Lit x) = (ms, [x])
+        f ms (Stars (Literal x)) = (ms, [x])
         f (m:ms) Skip = (ms, splitSep m)
         f ms (Stars (Wildcard pre mid post)) = (ms2, [concat $ pre : zipWith (++) ms1 (mid++[post])])
             where (ms1,ms2) = splitAt (length mid + 1) ms
