@@ -14,7 +14,7 @@ import qualified System.FilePattern.Legacy as Old
 import qualified System.FilePattern.Parser as Parser
 import qualified Data.Set as Set
 import System.FilePath(isPathSeparator, (</>))
-import Data.IORef
+import Data.IORef.Extra
 import System.IO.Unsafe
 import System.Info.Extra
 import Test.QuickCheck
