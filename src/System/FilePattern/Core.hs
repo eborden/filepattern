@@ -46,6 +46,32 @@ match (Stars x:xs) (y:ys) | Just rs <- wildcard x y = map (rs ++) $ match xs ys
 match [] [] = [[]]
 match _ _ = []
 
+repats :: Pats -> Wildcard [Wildcard String]
+repats (Pats xs) = case map (map unstars) $ split (== Skip) xs of
+    [] -> error "repats: given empty string"
+    [x] -> Literal x
+    pre:xs -> case unsnoc xs of
+        Nothing -> error "repats: Stars check failed"
+        Just (mid, post) -> Wildcard pre mid post
+    where unstars (Stars x) = x
+
+matchRepats :: Wildcard [Wildcard String] -> [String] -> Bool
+matchRepats (Literal xs) ys = eq xs ys
+matchRepats (Wildcard pre mid post) ys
+    | length ys < sum (map length $ pre : post : mid) = False
+    | otherwise = eq pre pre' && eq post post' && find mid rest2
+        where
+            (pre',rest) = splitAt (length pre) ys
+            (rest2,post') = splitAtEnd (length post) rest
+
+            find [] _ = True
+            find (m:ms) (y:ys)
+                | let (a,b) = splitAt (length m) (y:ys), eq m a = find ms b
+                | otherwise = find (m:ms) ys
+            find _ [] = False
+
+eq xs ys = length xs == length ys && all isJust (zipWith wildcard xs ys)
+
 
 matchOne :: Pat -> String -> Bool
 matchOne (Stars x) y = isJust $ wildcard x y
@@ -53,7 +79,8 @@ matchOne Skip _ = False
 
 
 matchBoolWith :: Pats -> FilePath -> Bool
-matchBoolWith (Pats pat) = isJust . matchWith (Pats $ optimise pat)
+matchBoolWith (Pats pat) = f . (\x -> if null x then [""] else x) . filter (/= ".") . split isPathSeparator
+    where f = matchRepats $ repats $ Pats $ optimise pat
 
 
 -- | Like '?==', but returns 'Nothing' on if there is no match, otherwise 'Just' with the list
