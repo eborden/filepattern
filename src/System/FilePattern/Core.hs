@@ -28,13 +28,6 @@ import System.FilePath (isPathSeparator)
 ---------------------------------------------------------------------
 -- PATTERNS
 
--- | Optimisations that may change the matched expressions
-optimise :: [Pat] -> [Pat]
-optimise (Skip:Skip:xs) = optimise $ Skip:xs
-optimise (x:xs) = x : optimise xs
-optimise [] = []
-
-
 -- | Given a pattern, and a list of path components, return a list of all matches
 --   (for each wildcard in order, what the wildcard matched).
 match :: [Pat] -> [String] -> [[String]]
@@ -80,7 +73,7 @@ matchOne Skip _ = False
 
 matchBoolWith :: Pats -> FilePath -> Bool
 matchBoolWith (Pats pat) = f . (\x -> if null x then [""] else x) . filter (/= ".") . split isPathSeparator
-    where f = matchRepats $ repats $ Pats $ optimise pat
+    where f = matchRepats $ repats $ Pats pat
 
 
 -- | Like '?==', but returns 'Nothing' on if there is no match, otherwise 'Just' with the list
@@ -153,7 +146,7 @@ data Walk = Walk ([String] -> ([String],[(String,Walk)]))
 walkWith :: [Pats] -> (Bool, Walk)
 walkWith patterns = (any (\p -> isEmpty p || not (null $ match p [""])) ps2, f ps2)
     where
-        ps2 = map (optimise . fromPats) patterns
+        ps2 = map fromPats patterns
 
         f (nubOrd -> ps)
             | all isLit fin, all (isLit . fst) nxt = WalkTo (map fromLit fin, map (fromLit *** f) nxt)
