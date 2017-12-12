@@ -65,6 +65,34 @@ matchRepats (Wildcard pre mid post) ys
 
 eq xs ys = length xs == length ys && all isJust (zipWith wildcard xs ys)
 
+matchRepats2 :: Wildcard [Wildcard String] -> [String] -> Maybe [String]
+matchRepats2 (Literal xs) ys = eq2 xs ys
+matchRepats2 (Wildcard pre mid post) ys
+    | length ys < sum (map length $ pre : post : mid) = Nothing
+    | otherwise = do
+            a <- eq2 pre pre'
+            c <- eq2 post post'
+            b <- find mid rest2
+            return $ a ++ rejig b ++ c
+        where
+            (pre',rest) = splitAt (length pre) ys
+            (rest2,post') = splitAtEnd (length post) rest
+
+            rejig (Left x:Left y:xs) = rejig (Left (x++y):xs)
+            rejig (Right x:xs) = x ++ rejig xs
+            rejig (Left x:xs) = x : rejig xs
+            rejig [] = []
+
+            find [] ys = Just [Left $ concatMap (++ "/") ys]
+            find (m:ms) ys | Just res <- eq2 m a = (\xs -> Left "":Right res:xs) <$> find ms b
+                where (a,b) = splitAt (length m) ys
+            find ms (y:ys) = (Left (y ++ "/"):) <$> find ms ys
+            find _ [] = Nothing
+
+eq2 :: [Wildcard String] -> [String] -> Maybe [String]
+eq2 xs ys | length xs == length ys = fmap concat . sequence $ zipWith wildcard xs ys
+          | otherwise = Nothing
+
 
 matchOne :: Pat -> String -> Bool
 matchOne (Stars x) y = isJust $ wildcard x y
@@ -88,7 +116,7 @@ matchBoolWith (Pats pat) = f . (\x -> if null x then [""] else x) . filter (/= "
 --   Note that the @**@ will often contain a trailing @\/@, and even on Windows any
 --   @\\@ separators will be replaced by @\/@.
 matchWith :: Pats -> FilePath -> Maybe [String]
-matchWith (Pats ps) = listToMaybe . match ps . (\x -> if null x then [""] else x) . filter (/= ".") . split isPathSeparator
+matchWith ps = matchRepats2 (repats ps) . (\x -> if null x then [""] else x) . filter (/= ".") . split isPathSeparator
 
 
 ---------------------------------------------------------------------
