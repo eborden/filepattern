@@ -28,17 +28,6 @@ import System.FilePath (isPathSeparator)
 ---------------------------------------------------------------------
 -- PATTERNS
 
--- | Given a pattern, and a list of path components, return a list of all matches
---   (for each wildcard in order, what the wildcard matched).
-match :: [Pat] -> [String] -> [[String]]
-match (Skip:xs) (y:ys) =
-    map ("":) (match xs (y:ys)) ++
-    [(y++"/"++r):rs | r:rs <- match (Skip:xs) ys]
-match (Skip:xs) [] = map ("":) $ match xs []
-match (Stars x:xs) (y:ys) | Just rs <- wildcard x y = map (rs ++) $ match xs ys
-match [] [] = [[]]
-match _ _ = []
-
 repats :: Pats -> Wildcard [Wildcard String]
 repats (Pats xs) = case map (map unstars) $ split (== Skip) xs of
     [] -> error "repats: given empty string"
@@ -172,7 +161,7 @@ data Walk = Walk ([String] -> ([String],[(String,Walk)]))
           | WalkTo            ([String],[(String,Walk)])
 
 walkWith :: [Pats] -> (Bool, Walk)
-walkWith patterns = (any (\p -> isEmpty p || not (null $ match p [""])) ps2, f ps2)
+walkWith patterns = (any (\p -> matchBoolWith (Pats p) "") ps2, f ps2)
     where
         ps2 = map fromPats patterns
 
