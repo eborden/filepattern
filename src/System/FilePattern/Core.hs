@@ -58,9 +58,9 @@ matchRepats (Wildcard pre mid post) ys
             (rest2,post') = splitAtEnd (length post) rest
 
             find [] _ = True
-            find (m:ms) (y:ys)
-                | let (a,b) = splitAt (length m) (y:ys), eq m a = find ms b
-                | otherwise = find (m:ms) ys
+            find (m:ms) ys | eq m a = find ms b
+                where (a,b) = splitAt (length m) ys
+            find ms (y:ys) = find ms ys
             find _ [] = False
 
 eq xs ys = length xs == length ys && all isJust (zipWith wildcard xs ys)
