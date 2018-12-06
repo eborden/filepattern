@@ -11,4 +11,4 @@ env:
 - GHCVER=head
 
 script:
-- curl -sSL https://raw.github.com/<github_user>/neil/<commit>/travis.sh | sh -s <github_user> <commit>
+- curl -sSL https://raw.github.com/ndmitchell/neil/master/travis.sh | sh
